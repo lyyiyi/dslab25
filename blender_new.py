@@ -15,12 +15,12 @@ def clear_scene():
 
 def setup_ground():
 	"""Create a ground plane at (0,0,0) and add a passive rigid body (Convex Hull)."""
-	bpy.ops.mesh.primitive_plane_add(size=15, location=(0, 0, 0))
+	bpy.ops.mesh.primitive_plane_add(size=25, location=(0, 0, 0))
 	plane = bpy.context.active_object
 
 	# Give it a dark gray material
 	mat = bpy.data.materials.new(name="GroundMaterial")
-	mat.diffuse_color = (0.05, 0.05, 0.05, 1.0)
+	mat.diffuse_color = (0.8, 0.8, 0.8, 1.0)
 	plane.data.materials.append(mat)
 	
 	# Add passive rigid body
@@ -126,6 +126,13 @@ def process_assembly(assembly_items, stage, perm_id=None):
 	except:
 		print("Could not set GPU rendering; check if your GPU is properly configured in Blender Preferences.")
 
+	# Optional performance tweaks:
+	scene.cycles.samples = 32
+	scene.cycles.use_adaptive_sampling = True
+	scene.cycles.max_bounces = 2
+	scene.cycles.diffuse_bounces = 2
+	scene.cycles.glossy_bounces = 2
+
 	clear_scene()
 	setup_ground()
 	setup_lights()
@@ -136,21 +143,18 @@ def process_assembly(assembly_items, stage, perm_id=None):
 	
 	objects = []
 	for stl_item in assembly_items:
+		# For items with a state flag (screws), only add if flag is 1
 		if len(stl_item) == 3:
 			file_path, texture_props, state_flag = stl_item
+			if state_flag == 0:
+				continue
 		else:
 			file_path, texture_props = stl_item
-			state_flag = 0
-			
 		obj = import_stl(file_path)
 		if obj:
 			bpy.context.view_layer.objects.active = obj
 			bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
 			
-			# If the state_flag is 1, rotate the screw 180° about the Z-axis
-			if state_flag == 1:
-				obj.rotation_euler[2] += math.radians(180)
-				
 			mat = make_material(texture_props)
 			obj.data.materials.clear()
 			obj.data.materials.append(mat)
@@ -214,7 +218,6 @@ def process_assembly(assembly_items, stage, perm_id=None):
 			render_image(cam, output_dir, f"stage_{stage}_case_render_{i+1}.jpg")
 
 def main():
-
 	texture_base = {
 		"color": [0.2, 0.2, 0.2, 1.0], "roughness": 0.5, "metallic": 0.9
 	}
@@ -270,17 +273,21 @@ def main():
 	]
 	curr_stls = []
 	for stage, stl_group in enumerate(stl_files):
-		# For groups marked as permutable (screws) use binary combinations (2^n)
-		if stl_group and len(stl_group[0]) == 3 and stl_group[0][2] == True:
+		# If the group is marked as permutable (the screws group)
+		if stl_group and len(stl_group[0]) == 3 and stl_group[0][2] is True:
 			combos = list(product([0, 1], repeat=len(stl_group)))
 			for c_index, combo in enumerate(combos):
+				# Skip the case where no screw is added
+				if sum(combo) == 0:
+					continue
 				new_group = []
 				for idx, screw_item in enumerate(stl_group):
+					# Only include the screw if the flag in this combo is 1
 					new_group.append((screw_item[0], screw_item[1], combo[idx]))
 				temp_stls = curr_stls + new_group
 				process_assembly(temp_stls, stage, c_index)
-			# For further stages, add the default state (flag = 0)
-			curr_stls += [(item[0], item[1], 0) for item in stl_group]
+			# For further stages, add the default state (all screws included, flag = 1)
+			curr_stls += [(item[0], item[1], 1) for item in stl_group]
 		else:
 			curr_stls += stl_group
 			process_assembly(curr_stls, stage)
