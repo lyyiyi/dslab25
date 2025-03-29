@@ -14,10 +14,8 @@ results = model.train(
     device="0"
 )
 
-
 # Save the fine-tuned model
 model.save(model_path)
-
 
 wandb.init("yolo_training")
 wandb.log_model(model_path)

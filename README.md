@@ -81,7 +81,9 @@ You have the following amount of hours for courses left:
 Your home has 19816MB free space of 20000MB total.
 ```
 
-run.sh contains training script
+run.sh contains training script \
+you need to change conda activate <env> to your env name\
+add your WANDB API key (don't push it, add script file to .gitignore)\
 run training script using
 
 `sbatch run.sh`

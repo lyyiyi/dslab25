@@ -1,14 +1,16 @@
 #!/bin/bash
 
 #SBATCH --time=24:00:00
-#SBATCH --account=3dv
+#SBATCH --account=dslab
 #SBATCH --output=%j.out
-#SBATCH --mincpus=2
-#SBATCH --gpus=4
-#SBATCH --mem-per-cpu=30000MB
+#SBATCH --mincpus=1
+#SBATCH --gpus=1
 
-. /etc/profile.d/modules.sh
-module add cuda/11.8
+source ~/miniconda3/etc/profile.d/conda.sh
+
+conda activate env
+
+export WANDB_API_KEY=<API KEY HERE>
 
 /bin/echo Running on host: `hostname`
 /bin/echo In directory: `pwd`
@@ -18,6 +20,6 @@ module add cuda/11.8
 # binary to execute
 set -o errexit
 
-srun python3 run_backbone_training.py
+srun python3 obj_detection/finetune.py
 echo finished at: `date`
 exit 0;
