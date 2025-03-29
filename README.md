@@ -89,4 +89,22 @@ run training script using
 ### Blender add on
 
 https://blendermarket.com/products/physics-dropper
-/Applications/Blender.app/Contents/MacOS/Blender --python blender.py
+/Applications/Blender.app/Contents/MacOS/Blender --python blender_new.py
+
+{
+"case_bottom": { # Gehaeuse_1_1_bottom
+"color": [0.59, 0.51, 0.43, 1.0] , "roughness": 0.65, "metallic": 1.0
+},
+"axel": { # rotor/roter
+"color": [0.30, 0.20, 0.15, 1.0] , "roughness": 0.9, "metallic": 0.2
+},
+"case_upper": { # Gehaeuse_teil_2_1
+"color": [0.59, 0.51, 0.43, 1.0] , "roughness": 0.65, "metallic": 1.0
+},
+"diamond": { # abstandplatte 1
+"color": [0.30, 0.20, 0.15, 1.0] , "roughness": 0.65, "metallic": 0.9
+},
+"cover_top": { Abdeckplatte
+"color": [0.01, 0.01, 0.01, 1] , "roughness": 0.5, "metallic": 0
+}
+}
