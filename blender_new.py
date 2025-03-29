@@ -2,6 +2,7 @@ import bpy
 import math
 import mathutils
 import os
+from itertools import product
 
 def clear_scene():
 	"""Delete all objects, meshes, and materials."""
@@ -17,9 +18,9 @@ def setup_ground():
 	bpy.ops.mesh.primitive_plane_add(size=15, location=(0, 0, 0))
 	plane = bpy.context.active_object
 
-	# Give it a white material
+	# Give it a dark gray material
 	mat = bpy.data.materials.new(name="GroundMaterial")
-	mat.diffuse_color = (0.1, 0.1, 0.1, 1.0)
+	mat.diffuse_color = (0.05, 0.05, 0.05, 1.0)
 	plane.data.materials.append(mat)
 	
 	# Add passive rigid body
@@ -27,7 +28,7 @@ def setup_ground():
 	plane.rigid_body.type = 'PASSIVE'
 	plane.rigid_body.collision_shape = 'CONVEX_HULL'
 	plane.rigid_body.use_margin = False
-	plane.hide_render = True
+	# plane.hide_render = True
 	return plane
 
 def setup_lights():
@@ -35,7 +36,6 @@ def setup_lights():
 	lights = []
 	bpy.ops.object.light_add(type='AREA', location=(0, 0, 5))
 	main_light = bpy.context.active_object
-	# main_light.data.energy = 2500
 	main_light.data.energy = 1000
 	main_light.data.size = 5
 	lights.append(main_light)
@@ -98,10 +98,9 @@ def import_stl(filepath):
 	return obj
 
 def setup_camera():
-	"""Create a camera at (0, 0, 10) looking straight down at the center."""
+	"""Create a camera at (0, 0, 15) looking straight down at the center."""
 	bpy.ops.object.camera_add(location=(0, 0, 15))
 	cam = bpy.context.active_object
-	# Point camera directly down (-Z direction)
 	cam.rotation_euler = (0, 0, 0)
 	cam.data.lens = 50
 	return cam
@@ -114,197 +113,184 @@ def render_image(cam, output_dir, filename="render.jpg"):
 	scene.render.filepath = os.path.join(output_dir, filename)
 	bpy.ops.render.render(write_still=True)
 
-def main():
-	# Adjust paths as needed
-	current_dir = os.getcwd() + '/training/vacuum_pump/generated/'
-	stl_dir = '/Users/georgye/Documents/repos/ethz/dslab25/training/vacuum_pump/stl/pieces/'
-	output_dir = os.path.join(current_dir, "output")
-	if not os.path.exists(output_dir):
-		os.makedirs(output_dir)
+def process_assembly(assembly_items, stage, perm_id=None):
+	# Set up GPU rendering (optional fallback inside try block in case it's not supported)
+	# bpy.context.scene.render.engine = 'CYCLES'
+	scene = bpy.context.scene
+	scene.render.engine = 'CYCLES'
+	prefs = bpy.context.preferences
+	try:
+		prefs.addons['cycles'].preferences.compute_device_type = 'METAL'  # or 'OPTIX'/'HIP'/'METAL'
+		scene.cycles.device = 'GPU'
+		print("GPU rendering enabled")
+	except:
+		print("Could not set GPU rendering; check if your GPU is properly configured in Blender Preferences.")
 
-	# STL files to load
-	# stl_files = [
-	# 	[
-	# 		(os.path.join(stl_dir, "1_base_deckel_screws.stl"), {
-	# 			"color": [0.59, 0.51, 0.43, 1.0] , "roughness": 0.65, "metallic": 1.0
-	# 		}),
-	# 		(os.path.join(stl_dir, "1_base_deckel.stl"), {
-	# 			"color": [0.59, 0.51, 0.43, 1.0] , "roughness": 0.65, "metallic": 1.0
-	# 		}),
-	# 		(os.path.join(stl_dir, "1_base.stl"), {
-	# 			"color": [0.59, 0.51, 0.43, 1.0] , "roughness": 0.65, "metallic": 1.0
-	# 		}),
-	# 	],
-	# 	[
-	# 		(os.path.join(stl_dir, "2_axel.stl"), {
-	# 			"color": [0.30, 0.20, 0.15, 1.0] , "roughness": 0.9, "metallic": 0.2
-	# 		}),
-	# 	],
-	# 	[
-	# 		(os.path.join(stl_dir, "3_middle_part.stl"), {
-	# 			"color": [0.59, 0.51, 0.43, 1.0] , "roughness": 0.65, "metallic": 1.0
-	# 		}),
-	# 		(os.path.join(stl_dir, "3_middle.stl"), {
-	# 			"color": [0.59, 0.51, 0.43, 1.0] , "roughness": 0.65, "metallic": 1.0
-	# 		}),
-	# 	], 
-	# 	[
-	# 		(os.path.join(stl_dir, "4_diamond.stl"), {
-	# 			"color": [0.30, 0.20, 0.15, 1.0] , "roughness": 0.65, "metallic": 0.9
-	# 		}),
-	# 	],
-	# 	[
-	# 		(os.path.join(stl_dir, "5_hub.stl"), {
-	# 			"color": [0.59, 0.51, 0.43, 1.0] , "roughness": 0.65, "metallic": 1.0
-	# 		}),
-	# 	], 
-	# 	[
-	# 		(os.path.join(stl_dir, "6_plate.stl"), {
-	# 			"color": [0.01, 0.01, 0.01, 1] , "roughness": 0.5, "metallic": 0
-	# 		}),
-	# 	],
-	# 	[
-	# 		(os.path.join(stl_dir, "7_screws.stl"), {
-	# 			"color": [0.59, 0.51, 0.43, 1.0] , "roughness": 0.65, "metallic": 1.0
-	# 		}),
-	# 	]
-	# ]
+	clear_scene()
+	setup_ground()
+	setup_lights()
+	
+	bpy.ops.object.empty_add(type='PLAIN_AXES', location=(0, 0, 0))
+	parent_empty = bpy.context.active_object
+	parent_empty.name = "Assembly_Parent"
+	
+	objects = []
+	for stl_item in assembly_items:
+		if len(stl_item) == 3:
+			file_path, texture_props, state_flag = stl_item
+		else:
+			file_path, texture_props = stl_item
+			state_flag = 0
+			
+		obj = import_stl(file_path)
+		if obj:
+			bpy.context.view_layer.objects.active = obj
+			bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
+			
+			# If the state_flag is 1, rotate the screw 180° about the Z-axis
+			if state_flag == 1:
+				obj.rotation_euler[2] += math.radians(180)
+				
+			mat = make_material(texture_props)
+			obj.data.materials.clear()
+			obj.data.materials.append(mat)
+			objects.append(obj)
+			obj.parent = parent_empty
+	
+	# Center assembly based solely on object origins
+	min_x, min_y, min_z = float('inf'), float('inf'), float('inf')
+	max_x, max_y, max_z = float('-inf'), float('-inf'), float('-inf')
+	
+	for obj in objects:
+		loc = obj.location
+		min_x = min(min_x, loc.x)
+		max_x = max(max_x, loc.x)
+		min_y = min(min_y, loc.y)
+		max_y = max(max_y, loc.y)
+		min_z = min(min_z, loc.z)
+		max_z = max(max_z, loc.z)
+	
+	center_x = (min_x + max_x) / 2
+	center_y = (min_y + max_y) / 2
+	center_z = (min_z + max_z) / 2
+	
+	width = max_x - min_x
+	height = max_y - min_y
+	depth = max_z - min_z
+	max_dimension = max(width, height, depth)
+	
+	print(f"Assembly center: ({center_x}, {center_y}, {center_z})")
+	print(f"Assembly dimensions: width={width}, height={height}, depth={depth})")
+	
+	parent_empty.location = (-center_x, center_y, -center_z)
+	parent_empty.location[0] = -3.5
+	parent_empty.location[1] = -3.5
+	parent_empty.location[2] = 0.3
+	
+	if max_dimension > 0 and max_dimension != 5.0:
+		scale_factor = 0.05
+		print(f"Scaling assembly by factor: {scale_factor}")
+		parent_empty.scale = (scale_factor, scale_factor, scale_factor)
+	
+	scene = bpy.context.scene
+	scene.render.resolution_x = 512
+	scene.render.resolution_y = 512
+	scene.render.image_settings.file_format = 'JPEG'
+	# scene.render.film_transparent = True
+	
+	camera_positions = [
+		(3, 3, 25), (0, 3, 25), (-3, 3, 25),
+		(3, 0, 25), (0, 0, 25), (-3, 0, 25),
+		(3, -3, 25), (0, -3, 25), (-3, -3, 25)
+	]
+	for i, pos in enumerate(camera_positions):
+		bpy.ops.object.camera_add(location=pos)
+		cam = bpy.context.active_object
+		cam.rotation_euler = (0, 0, 0)
+		cam.data.lens = 50
+		if perm_id is not None:
+			render_image(cam, output_dir, f"stage_{stage}_perm_{perm_id}_case_render_{i+1}.jpg")
+		else:
+			render_image(cam, output_dir, f"stage_{stage}_case_render_{i+1}.jpg")
+
+def main():
+
 	texture_base = {
-		"color": [0.2, 0.2, 0.2, 1.0] , "roughness": 0.5, "metallic": 0.9
+		"color": [0.2, 0.2, 0.2, 1.0], "roughness": 0.5, "metallic": 0.9
 	}
 	texture_screws = {
-		"color": [0.4, 0.4, 0.4, 1.0] , "roughness": 0.65, "metallic": 1
+		"color": [0.4, 0.4, 0.4, 1.0], "roughness": 0.65, "metallic": 1
 	}
 	texture_axel = {
-		"color": [0.04, 0.035, 0.03, 1.0] , "roughness": 0.5, "metallic": 0.7
+		"color": [0.04, 0.035, 0.03, 1.0], "roughness": 0.5, "metallic": 0.7
 	}
 	texture_darker = {
-		"color": [0.1, 0.1, 0.1, 1.0] , "roughness": 0.65, "metallic": 0.9
+		"color": [0.1, 0.1, 0.1, 1.0], "roughness": 0.65, "metallic": 0.9
 	}
 	texture_hub = {
-		"color": [0.2, 0.2, 0.2, 1.0] , "roughness": 0.65, "metallic": 1.0
+		"color": [0.2, 0.2, 0.2, 1.0], "roughness": 0.65, "metallic": 1.0
 	}
 	texture_plate = {
-		"color": [0.00, 0.00, 0.00, 1] , "roughness": 1.0, "metallic": 0
+		"color": [0.00, 0.00, 0.00, 1], "roughness": 1.0, "metallic": 0
 	}
 	stl_files = [
 		[
 			(os.path.join(stl_dir, "1_base.stl"), texture_base),
 			(os.path.join(stl_dir, "1_base_deckel.stl"), texture_base),
-			(os.path.join(stl_dir, "1_base_deckel_screws.stl"), texture_screws),
+			(os.path.join(stl_dir, "1_base_deckel_screws.stl"), texture_screws)
 		],
 		[
-			(os.path.join(stl_dir, "2_axel.stl"), texture_axel),
+			(os.path.join(stl_dir, "2_axel.stl"), texture_axel)
 		],
 		[
 			(os.path.join(stl_dir, "3_middle_part.stl"), texture_base),
-			(os.path.join(stl_dir, "3_middle.stl"), texture_base),
+			(os.path.join(stl_dir, "3_middle.stl"), texture_base)
 		], 
 		[
-			(os.path.join(stl_dir, "4_diamond.stl"), texture_darker),
+			(os.path.join(stl_dir, "4_diamond.stl"), texture_darker)
 		],
 		[
-			(os.path.join(stl_dir, "5_hub.stl"), texture_hub),
+			(os.path.join(stl_dir, "5_hub.stl"), texture_hub)
 		], 
 		[
-			(os.path.join(stl_dir, "6_plate.stl"), texture_plate),
+			(os.path.join(stl_dir, "6_screws_01.stl"), texture_screws, True),
+			(os.path.join(stl_dir, "6_screws_02.stl"), texture_screws, True),
+			(os.path.join(stl_dir, "6_screws_03.stl"), texture_screws, True)
 		],
 		[
-			(os.path.join(stl_dir, "7_screws.stl"), texture_screws),
+			(os.path.join(stl_dir, "7_plate.stl"), texture_plate)
+		],
+		[
+			(os.path.join(stl_dir, "8_screws_01.stl"), texture_screws, True),
+			(os.path.join(stl_dir, "8_screws_02.stl"), texture_screws, True),
+			(os.path.join(stl_dir, "8_screws_03.stl"), texture_screws, True),
+			(os.path.join(stl_dir, "8_screws_04.stl"), texture_screws, True),
+			(os.path.join(stl_dir, "8_screws_05.stl"), texture_screws, True)
 		]
 	]
 	curr_stls = []
 	for stage, stl_group in enumerate(stl_files):
-		curr_stls += stl_group
-		# Use Cycles for better rendering
-		bpy.context.scene.render.engine = 'CYCLES'
-
-		clear_scene()
-		setup_ground()
-		setup_lights()
-		
-		# Create an empty parent object at the origin
-		bpy.ops.object.empty_add(type='PLAIN_AXES', location=(0, 0, 0))
-		parent_empty = bpy.context.active_object
-		parent_empty.name = "Assembly_Parent"
-		
-		# Import STL files, reset origin, create per-object texture material, and parent to the empty
-		objects = []
-		for stl_item in curr_stls:
-			file_path, texture_props = stl_item
-			obj = import_stl(file_path)
-			if obj:
-				# Reset the object's origin to its geometric center
-				bpy.context.view_layer.objects.active = obj
-				bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
-				
-				mat = make_material(texture_props)
-				obj.data.materials.clear()
-				obj.data.materials.append(mat)
-				objects.append(obj)
-				
-				# Parent to the empty (this preserves current world position)
-				obj.parent = parent_empty
-		
-		# Now center the assembly based solely on object origins
-		min_x, min_y, min_z = float('inf'), float('inf'), float('inf')
-		max_x, max_y, max_z = float('-inf'), float('-inf'), float('-inf')
-		
-		for obj in objects:
-			loc = obj.location
-			min_x = min(min_x, loc.x)
-			max_x = max(max_x, loc.x)
-			min_y = min(min_y, loc.y)
-			max_y = max(max_y, loc.y)
-			min_z = min(min_z, loc.z)
-			max_z = max(max_z, loc.z)
-		
-		center_x = (min_x + max_x) / 2
-		center_y = (min_y + max_y) / 2
-		center_z = (min_z + max_z) / 2
-		
-		width = max_x - min_x
-		height = max_y - min_y
-		depth = max_z - min_z
-		max_dimension = max(width, height, depth)
-		
-		print(f"Assembly center: ({center_x}, {center_y}, {center_z})")
-		print(f"Assembly dimensions: width={width}, height={height}, depth={depth}")
-		
-		# Move the parent empty to counteract the center (which will move all children)
-		parent_empty.location = (-center_x,center_y, -center_z)
-		parent_empty.location[0] = -3.5
-		parent_empty.location[1] = -3.5
-		parent_empty.location[2] = 0.3
-		
-		# Scale the entire assembly if needed by scaling the parent
-		if max_dimension > 0 and max_dimension != 5.0:
-			# scale_factor = 2.20 / max_dimension
-			scale_factor = 0.05
-			print(f"Scaling assembly by factor: {scale_factor}")
-			parent_empty.scale = (scale_factor, scale_factor, scale_factor)
-		
-		# Set render resolution and PNG settings with transparent background
-		scene = bpy.context.scene
-		scene.render.resolution_x = 512
-		scene.render.resolution_y = 512
-		scene.render.image_settings.file_format = 'PNG'
-		scene.render.film_transparent = True
-		
-		# Setup 9 cameras in a 3x3 grid and render 9 images
-		camera_positions = [
-			(3, 3, 25), (0, 3, 25), (-3, 3, 25),
-			(3, 0, 25), (0, 0, 25), (-3, 0, 25),
-			(3, -3, 25), (0, -3, 25), (-3, -3, 25)
-		]
-		for i, pos in enumerate(camera_positions):
-			bpy.ops.object.camera_add(location=pos)
-			cam = bpy.context.active_object
-			cam.rotation_euler = (0, 0, 0)
-			cam.data.lens = 50
-			render_image(cam, output_dir, f"stage_{stage}_case_render_{i+1}.jpg")
-		
+		# For groups marked as permutable (screws) use binary combinations (2^n)
+		if stl_group and len(stl_group[0]) == 3 and stl_group[0][2] == True:
+			combos = list(product([0, 1], repeat=len(stl_group)))
+			for c_index, combo in enumerate(combos):
+				new_group = []
+				for idx, screw_item in enumerate(stl_group):
+					new_group.append((screw_item[0], screw_item[1], combo[idx]))
+				temp_stls = curr_stls + new_group
+				process_assembly(temp_stls, stage, c_index)
+			# For further stages, add the default state (flag = 0)
+			curr_stls += [(item[0], item[1], 0) for item in stl_group]
+		else:
+			curr_stls += stl_group
+			process_assembly(curr_stls, stage)
+	
 	print("Rendering complete!")
 
 if __name__ == "__main__":
+	current_dir = os.getcwd() + '/training/vacuum_pump/generated/'
+	stl_dir = '/Users/georgye/Documents/repos/ethz/dslab25/training/vacuum_pump/stl/pieces/'
+	output_dir = os.path.join(current_dir, "output")
+	if not os.path.exists(output_dir):
+		os.makedirs(output_dir)
 	main()
