@@ -34,7 +34,7 @@ The cluster uses Slurm and a general guide to the cluster can be found at: https
 You can follow the steps in this message to quickly login the first time and create your conda environment. For more details visit the link above.Login to cluster:
 To login to the student cluster, open your powershell and connect through ssh to one of the 2 login nodes of the student cluster:
 
-`ssh <username>@student-cluster{?2}.inf.ethz.ch` (regex)
+`ssh <username>@student-cluster{?2}.inf.ethz.ch` (either include 2 or not)
 
 If you want to use Jupyter you can login from this link: https://student-jupyter.inf.ethz.ch.Using
 
