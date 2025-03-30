@@ -10,7 +10,7 @@ source ~/miniconda3/etc/profile.d/conda.sh
 
 conda activate env
 
-export WANDB_API_KEY=<YOUR API KEY HERE>
+export WANDB_API_KEY=6c3d2b57c8093f64a7cbb9710592fad1e14f8fa6
 
 /bin/echo Running on host: `hostname`
 /bin/echo In directory: `pwd`
