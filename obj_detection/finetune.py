@@ -9,7 +9,8 @@ results = model.train(
     data="./data.yaml",
     epochs=100,
     imgsz=640,
-    project="yolo_training",  # wandb project name
+    entity="dslab25",
+    project="yolo",  # wandb project name
     name="yolov9_finetune",     # wandb run name
     device="0"
 )
@@ -17,6 +18,6 @@ results = model.train(
 # Save the fine-tuned model
 model.save(model_path)
 
-wandb.init("yolo_training")
+wandb.init("yolo")
 wandb.log_model(model_path)
 wandb.finish()
