@@ -110,3 +110,7 @@ https://blendermarket.com/products/physics-dropper
 "color": [0.01, 0.01, 0.01, 1] , "roughness": 0.5, "metallic": 0
 }
 }
+
+### Generate annotations
+
+python3 annotation.py --root /Users/georgye/Documents/repos/ethz/dslab25/training/vacuum_pump/generated/output/stages --output-dir ./anno
