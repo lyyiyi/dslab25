@@ -83,7 +83,7 @@ def process_images(root_dir, output_dir=None):
 	based on grid offsets, convert to YOLO format, and write a label file.
 	"""
 	# Walk through subfolders in root_dir
-	for stage in sorted(os.listdir(root_dir)):
+	for idx, stage in enumerate(sorted(os.listdir(root_dir))):
 		stage_path = os.path.join(root_dir, stage)
 		if not os.path.isdir(stage_path) or not stage.startswith("stage_"):
 			continue
@@ -112,7 +112,7 @@ def process_images(root_dir, output_dir=None):
 			# Convert bbox to YOLO format (normalized)
 			yolo_bbox = convert_bbox_to_yolo(bbox, img_width=512, img_height=512)
 			# Format the annotation line (class "0")
-			annotation_line = "0 {:.9f} {:.9f} {:.9f} {:.9f}".format(*yolo_bbox)
+			annotation_line = "{:d} {:.9f} {:.9f} {:.9f} {:.9f}".format(idx - 1, *yolo_bbox)
 
 			# Determine where to save the label file
 			# If an output directory is provided, mirror the stage folder structure.
