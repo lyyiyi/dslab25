@@ -1,4 +1,4 @@
-train:
-val:
-nc: 7
-names: [...]
+train: /home/owendu/dslab25/obj_detection/data/images/train
+val: /home/owendu/dslab25/obj_detection/data/images/val
+nc: 8
+names: [base, axle, middle, diamond, hub, screws1, plate, screws2]

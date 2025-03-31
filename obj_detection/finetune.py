@@ -3,16 +3,14 @@ import wandb
 
 # Load a pretrained YOLOv9 model
 model = YOLO("yolov9c.pt")
-model_path = "yolov9c_finetunedv2.pt"
+model_path = "obj_detection/yolov9c_finetunedv2.pt"
 # Train the model on your datasetfine
 results = model.train(
-    data="./data.yaml",
-    epochs=100,
-    imgsz=640,
-    entity="dslab25",
+    data="/home/owendu/dslab25/obj_detection/data.yaml",
+    epochs=1,
+    imgsz=512,
     project="yolo",  # wandb project name
     name="yolov9_finetune",     # wandb run name
-    device="0"
 )
 
 # Save the fine-tuned model
