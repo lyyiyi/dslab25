@@ -9,156 +9,109 @@ st.set_page_config(page_title="Manual Validation Pipeline", layout="wide")
 
 # Cache the model loading function
 @st.cache_resource
-def load_model(model_name):
-    if model_name == 'YOLO':
-        return YOLO('yolov8n.pt')  # Load pretrained YOLOv8n model
+def load_model(checkpoint_path, model):
+    if not os.path.exists(checkpoint_path):
+        st.error(f"Model ckpt not found at: {checkpoint_path}")
+        return None
     else:
-        raise ValueError("Selected model not supported")
+        return model(checkpoint_path)
+
+def initialize_resources(checkpoint_path, model, video_path):
+    """initialize session state variables"""
+    if not os.path.exists(video_path) or not os.path.exists(checkpoint_path):
+        return False
+    try:
+        st.session_state_model = load_model(checkpoint_path, model)
+        st.session_state.cap = cv2.VideoCapture(video_path)
+        st.session_state.total_frames = int(st.session_state.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        return True
+    except Exception as e:
+        st.error(f"Initialization failed: {str(e)}")
+        return False
+
+checkpoints = {}
+# yolo checkpoints
+checkpoints["yolo"] = ["/home/owendu/dslab25/obj_detection/yolo/yolov9_finetune2/weights/best.pt"]
+models = {}
+models["yolo"] = YOLO
+
+# paths
+video_paths = [f"/home/owendu/dslab25/training/vacuum_pump/videos/01_run{run}_cam_{cam}_1024x1024_15fps_3mbps.mp4" \
+    for run in (1,2,3) for cam in (2,3)]
+
+st.session_state.model = None
+st.session_state.cap = None # video capture
+st.session_state.total_frames = 0
+st.session_state.current_frame = 0
 
 # Sidebar for controls
 with st.sidebar:
     st.header("Controls")
-    model_option = st.selectbox('Select Model', ['YOLO'])
-    uploaded_video = st.file_uploader("Upload MP4 Video", type=["mp4"])
+    model_option = st.selectbox('Select Model', ['yolo'])
+    checkpoint_path = st.selectbox('Select Checkpoint', checkpoints["model_option"])
+    video_path = st.selectbox('Select video', video_paths)
+    md = models[model_option]
+    if initialize_resources(checkpoint_path, md, video_path):
+        st.success("video loaded")
+    else:
+        st.error("video load failed")
+
 
 # Main content area
 st.title("Video Validation Pipeline")
-col1, col2 = st.columns([3, 1])
 
-# Initialize session state variables
-if 'processed_data' not in st.session_state:
-    st.session_state.processed_data = None
-if 'current_frame' not in st.session_state:
-    st.session_state.current_frame = 0
+if st.session_state.cap is not None and st.session_state.model is not None:
 
-if uploaded_video is not None:
-    # Save uploaded video to temporary file
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tfile:
-        tfile.write(uploaded_video.read())
-        video_path = tfile.name
-
-    # Process video button
-    if st.sidebar.button('Process Video'):
-        model = load_model(model_option)
-        
-        # Initialize video capture
-        cap = cv2.VideoCapture(video_path)
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        
-        processed_frames = []
-        processed_detections = []
-        
-        progress_bar = st.sidebar.progress(0)
-        status_text = st.sidebar.empty()
-        
-        for frame_num in range(total_frames):
-            ret, frame = cap.read()
-            if not ret:
-                break
-            
-            # Convert frame to RGB and process with YOLO
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            results = model(frame_rgb)
-            
-            # Store frame and detections
-            processed_frames.append(frame_rgb)
-            boxes = results[0].boxes.xyxy.cpu().numpy()
-            classes = results[0].boxes.cls.cpu().numpy()
-            scores = results[0].boxes.conf.cpu().numpy()
-            processed_detections.append((boxes, classes, scores))
-            
-            # Update progress
-            progress = (frame_num + 1) / total_frames
-            progress_bar.progress(progress)
-            status_text.text(f"Processing Frame {frame_num + 1}/{total_frames}")
-        
-        cap.release()
-        os.unlink(video_path)  # Delete temporary file
-        
-        # Save results to session state
-        st.session_state.processed_data = {
-            'frames': processed_frames,
-            'detections': processed_detections,
-            'fps': fps,
-            'total_frames': total_frames
-        }
-        
-        progress_bar.empty()
-        status_text.success("Video processing completed!")
-
-# Display processed video
-if st.session_state.processed_data:
-    frames = st.session_state.processed_data['frames']
-    detections = st.session_state.processed_data['detections']
-    total_frames = st.session_state.processed_data['total_frames']
-    
-    # Frame slider
-    current_frame = col2.slider(
-        "Select Frame",
-        0, total_frames - 1,
+    new_frame = st.slider(
+        "Select frame",
+        0,
+        st.session_state.total_frames-1,
         value=st.session_state.current_frame,
         key="frame_slider"
     )
-    
-    # Navigation buttons
-    col1, col2, col3 = col2.columns([1, 3, 1])
-    if col1.button("Previous") and current_frame > 0:
-        st.session_state.current_frame -= 1
-    if col3.button("Next") and current_frame < total_frames - 1:
-        st.session_state.current_frame += 1
-    
-    # Get current frame data
-    frame = frames[current_frame]
-    boxes, classes, scores = detections[current_frame]
-    
-    # Draw bounding boxes and labels
-    for box, cls, score in zip(boxes, classes, scores):
-        x1, y1, x2, y2 = map(int, box)
-        label = model.model.names[int(cls)]
-        
-        # Draw rectangle
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        
-        # Draw label background
-        (text_width, text_height), _ = cv2.getTextSize(
-            f"{label} {score:.2f}", 
-            cv2.FONT_HERSHEY_SIMPLEX, 
-            0.5, 1
-        )
-        cv2.rectangle(
-            frame, 
-            (x1, y1 - text_height - 10),
-            (x1 + text_width, y1),
-            (0, 255, 0), 
-            -1
-        )
-        
-        # Draw text
-        cv2.putText(
-            frame, 
-            f"{label} {score:.2f}",
-            (x1, y1 - 10), 
-            cv2.FONT_HERSHEY_SIMPLEX, 
-            0.5, 
-            (0, 0, 0), 
-            1
-        )
-    
-    # Display frame
-    col1.image(frame, use_column_width=True, channels="RGB")
-    
-    # Display frame info
-    col2.write(f"**Current Frame:** {current_frame + 1}/{total_frames}")
-    col2.write(f"**Detections:** {len(boxes)} objects found")
-else:
-    col1.write("Upload and process a video to begin validation")
 
-# Add some styling
-st.markdown("""
-    <style>
-    .stSlider>div>div>div>div {
-        background: #4CAF50;
-    }
-    </style>
-""", unsafe_allow_html=True)
+    if new_frame != st.session_state.current_frame:
+        st.session_state.current_frame = new_frame
+        st.session_state.cap.set(cv2.CAP_PROP_POS_FRAMES, new_frame)
+
+    ret, frame = st.session_state.cap.read()
+    if ret:
+        # Convert and process frame
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = st.session_state.model(frame_rgb)
+        
+        # Draw detections
+        boxes = results[0].boxes.xyxy.cpu().numpy()
+        classes = results[0].boxes.cls.cpu().numpy()
+        scores = results[0].boxes.conf.cpu().numpy()
+        
+        for box, cls, score in zip(boxes, classes, scores):
+            x1, y1, x2, y2 = map(int, box)
+            label = st.session_state.model.model.names[int(cls)]
+            
+            # Draw bounding box
+            cv2.rectangle(frame_rgb, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            
+            # Draw label
+            (text_width, text_height), _ = cv2.getTextSize(
+                f"{label} {score:.2f}", cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+            cv2.rectangle(frame_rgb, (x1, y1 - text_height - 10),
+                        (x1 + text_width, y1), (0, 255, 0), -1)
+            cv2.putText(frame_rgb, f"{label} {score:.2f}",
+                        (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 
+                        0.5, (0, 0, 0), 1)
+        
+        # Display frame and info
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.image(frame_rgb, use_column_width=True, channels="RGB")
+        with col2:
+            st.write(f"**Frame:** {st.session_state.current_frame + 1}/{st.session_state.total_frames}")
+            st.write(f"**Detections:** {len(boxes)} objects")
+            st.write(f"**Model:** {os.path.basename(checkpoint_path)}")
+else:
+    st.info("Please initialize resources in the sidebar to begin")
+
+# Cleanup when done
+if st.session_state.cap is not None:
+    st.session_state.cap.release()
