@@ -88,37 +88,90 @@ run training script using
 
 `sbatch run.sh`
 
-### Blender add on
+## Blender
+
+### Textures given to us by the challenger giver:
+
+They are wrong lol.
+
+```json
+{
+    # Gehaeuse_1_1_bottom
+    "case_bottom": {
+      "color": [0.59, 0.51, 0.43, 1.0] ,
+      "roughness": 0.65,
+      "metallic": 1.0
+    },
+    # rotor/roter
+    "axel": {
+      "color": [0.30, 0.20, 0.15, 1.0],
+      "roughness": 0.9,
+      "metallic": 0.2
+    },
+    # Gehaeuse_teil_2_1
+    "case_upper": {
+      "color": [0.59, 0.51, 0.43, 1.0] ,
+      "roughness": 0.65,
+      "metallic": 1.0
+    },
+    # abstandplatte 1
+    "diamond": {
+      "color": [0.30, 0.20, 0.15, 1.0],
+      "roughness": 0.65,
+      "metallic": 0.9
+    },
+    # Abdeckplatte
+    "cover_top": {
+      "color": [0.01, 0.01, 0.01, 1],
+      "roughness": 0.5,
+      "metallic": 0
+    }
+  }
+```
+
+### Install the blender add on (no longer needed):
 
 https://blendermarket.com/products/physics-dropper
-/Applications/Blender.app/Contents/MacOS/Blender --python blender_new.py
 
-{
-"case_bottom": { # Gehaeuse_1_1_bottom
-"color": [0.59, 0.51, 0.43, 1.0] , "roughness": 0.65, "metallic": 1.0
-},
-"axel": { # rotor/roter
-"color": [0.30, 0.20, 0.15, 1.0] , "roughness": 0.9, "metallic": 0.2
-},
-"case_upper": { # Gehaeuse_teil_2_1
-"color": [0.59, 0.51, 0.43, 1.0] , "roughness": 0.65, "metallic": 1.0
-},
-"diamond": { # abstandplatte 1
-"color": [0.30, 0.20, 0.15, 1.0] , "roughness": 0.65, "metallic": 0.9
-},
-"cover_top": { Abdeckplatte
-"color": [0.01, 0.01, 0.01, 1] , "roughness": 0.5, "metallic": 0
-}
-}
+### Run the blender script
+
+`/Applications/Blender.app/Contents/MacOS/Blender --python blender_new.py`
 
 ### Generate annotations
 
-python3 annotation.py --root /Users/georgye/Documents/repos/ethz/dslab25/training/vacuum_pump/generated/output/stages --output-dir ./anno
+This is old, dont use this anymore. If you need to create annotations from scratch write a new script
 
-### Zip folder without .git and venv
+`python3 annotation.py --root /Users/georgye/Documents/repos/ethz/dslab25/training vacuum_pump/generated/output/stages --output-dir ./anno`
 
-zip -r dslab25.zip dslab25 -x "dslab25/.git/\*" "dslab25/venv/\*"
+### Useful commands
 
-### Train
+Zip folder without .git and venv:
+`zip -r dslab25.zip dslab25 -x "dslab25/.git/\*" "dslab25/venv/\*"`
 
-torchrun --nproc_per_node=4 obj_detection/dino/train.py
+### Augment images
+
+We do the following
+
+1. Rotation (20 degrees increements)
+2. Brightness
+3. Obscure
+
+First go to `obj_detection/preproccessing/augment.ipynb` and run the Rotate (Images) cell.
+Then go to roboflow and annotate them manually, then put them in `obj_detection/preproccessing/stage_0/labels` and run the rest of the
+
+## Running Dino
+
+### Preprocessing
+
+You need to create a `coco.json` first. Run all cells of `obj_detection/dino/coco.ipynb` first.
+
+### Training
+
+Run this command (replace n with whatever how many gpus you have)
+`torchrun --nproc_per_node=n obj_detection/dino/train.py`
+
+### Testing model weights
+
+Note you need to model weights in `obj_detection/dino/final_model`.
+Run:
+`python3 obj_detection/dino/eval.py`
