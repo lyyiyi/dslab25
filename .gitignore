@@ -5,3 +5,4 @@ run.sh
 obj_detection/data
 training/vacuum_pump/images/augmented
 training/vacuum_pump/annotation/augmented
+obj_detection/dino/final_model/*
