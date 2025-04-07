@@ -114,3 +114,11 @@ https://blendermarket.com/products/physics-dropper
 ### Generate annotations
 
 python3 annotation.py --root /Users/georgye/Documents/repos/ethz/dslab25/training/vacuum_pump/generated/output/stages --output-dir ./anno
+
+### Zip folder without .git and venv
+
+zip -r dslab25.zip dslab25 -x "dslab25/.git/\*" "dslab25/venv/\*"
+
+### Train
+
+torchrun --nproc_per_node=4 obj_detection/dino/train.py
