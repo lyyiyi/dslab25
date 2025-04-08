@@ -9,17 +9,15 @@ from utils import DINOv2Dataset, DINOv2Classifier
 
 # CONFIG
 repo_dir = os.getcwd().split('dslab25')[0] + 'dslab25/'
-base_dir = repo_dir + "obj_detection/dino/"
-root_dir = base_dir + "training/vacuum_pump"
-image_dir = os.path.join(root_dir, "images/augmented")
-label_dir = os.path.join(root_dir, "annotation/augmented")
-coco_path = os.path.join(root_dir, "coco_annotations.json")
-
-# Note: predict_image would also need refactoring to use the DINOv2Classifier if used post-training
-# For simplicity, it's removed from this training script focus.
+dino_dir = os.path.join(repo_dir, "obj_detection/dino") 
+training_dir = os.path.join(repo_dir, "training/vacuum_pump")
+image_dir = os.path.join(training_dir, "images/augmented")
+label_dir = os.path.join(training_dir, "annotation/augmented")
+coco_path = os.path.join(training_dir, "coco_annotations.json")
+pretrained_model = "facebook/dinov2-with-registers-base"
 
 def main():
-	# Determine device (Trainer will handle distribution, but good practice)
+	# Determine device
 	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 	print(f"Initial device check: {device}")
 
@@ -42,31 +40,32 @@ def main():
 	dataset = dataset.train_test_split(test_size=0.2, seed=42)
 	
 	print("Initializing Image Processor...")
-	# Initialize the image processor
-	processor = AutoImageProcessor.from_pretrained("facebook/dinov2-base")
+	processor = AutoImageProcessor.from_pretrained(pretrained_model)
 	
 	print("Preparing datasets...")
 	train_dataset = DINOv2Dataset(dataset["train"], processor)
 	eval_dataset = DINOv2Dataset(dataset["test"], processor)
 	
-	print("Initializing DINOv2 Classifier model...")
-	# Initialize the combined classifier model
-	# Trainer will handle moving the model to the correct device(s)
-	model = DINOv2Classifier(num_labels=len(set(dataset_dict["label"]))) 
+	print("Train dataset size:", len(train_dataset))
+	print("Eval dataset size:", len(eval_dataset))
+	
+	print("Initializing DINOv2 Classifier model for fine-tuning...")
+	num_labels = len(set(dataset_dict["label"]))
+	model = DINOv2Classifier(num_labels=num_labels, pretrained_model=pretrained_model)
 	
 	training_args = TrainingArguments(
-		output_dir=os.path.join(root_dir, "dinov2_register_classifier_multi_gpu"), # New output dir
-		learning_rate=3e-4, # Adjust as needed
-		per_device_train_batch_size=64, # Batch size PER GPU
-		per_device_eval_batch_size=64,  # Batch size PER GPU
-		num_train_epochs=10, # Adjust as needed
-		weight_decay=0.01, # Adjust as needed
+		output_dir=os.path.join(dino_dir, "dinov2_finetune"),
+		learning_rate=1e-5,  # Lower learning rate for fine-tuning
+		per_device_train_batch_size=16,  # Adjust batch size to your GPU memory
+		per_device_eval_batch_size=16,
+		num_train_epochs=3,  # Fewer epochs may suffice for fine-tuning
+		weight_decay=0.01,
 		eval_strategy="epoch",
 		save_strategy="epoch",
 		load_best_model_at_end=True,
-		dataloader_num_workers=4,  # Re-enable workers (adjust based on your system)
-		logging_steps=10,         # Log more frequently
-		# fp16=torch.cuda.is_available(), # Optional: Enable mixed precision if desired
+		dataloader_num_workers=4,
+		logging_steps=10,
+		fp16=torch.cuda.is_available(),
 	)
 	
 	metric = evaluate.load("accuracy")
@@ -81,7 +80,6 @@ def main():
 		train_dataset=train_dataset,
 		eval_dataset=eval_dataset,
 		compute_metrics=compute_metrics,
-		# data_collator=default_data_collator # Use default collator
 	)
 	
 	print("Starting training...")
@@ -96,6 +94,4 @@ def main():
 	print(f"Evaluation results: {eval_results}")
 
 if __name__ == "__main__":
-	# No specific multiprocessing start method needed here,
-	# use torchrun for distributed training.
 	main()

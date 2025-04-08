@@ -146,7 +146,10 @@ This is old, dont use this anymore. If you need to create annotations from scrat
 ### Useful commands
 
 Zip folder without .git and venv:
-`zip -r dslab25.zip dslab25 -x "dslab25/.git/\*" "dslab25/venv/\*"`
+`zip -r dslab25.zip dslab25 -x "dslab25/.git/*" "dslab25/venv/*" "dslab25/obj_detection/dino/yolo_runs/*"`
+
+Send data on runpod:
+`runpodctl send data.txt`
 
 ### Augment images
 
@@ -175,3 +178,9 @@ Run this command (replace n with whatever how many gpus you have)
 Note you need to model weights in `obj_detection/dino/final_model`.
 Run:
 `python3 obj_detection/dino/eval.py`
+
+# TODO:
+
+- augment with scale and shear
+- blender one with and without random objects
+- randomize objects in each render in blender

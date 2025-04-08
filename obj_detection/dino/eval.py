@@ -13,7 +13,7 @@ repo_dir = os.getcwd().split('dslab25')[0] + 'dslab25/'
 base_dir = repo_dir + "training/vacuum_pump"
 image_dir = os.path.join(base_dir, "images/augmented")
 coco_path = os.path.join(base_dir, "coco_annotations.json")
-model_dir = os.path.join(repo_dir, "obj_detection/dino/dinov2_register_classifier_multi_gpu/final_model/")
+model_dir = os.path.join(repo_dir, "obj_detection/dino/dinov2_finetune/final_model/")
 
 def main():
 	print(f"Loading COCO annotations from: {coco_path}")

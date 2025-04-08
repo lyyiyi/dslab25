@@ -295,8 +295,9 @@ def main():
 	print("Rendering complete!")
 
 if __name__ == "__main__":
-	stl_dir = '/Users/georgye/Documents/repos/ethz/dslab25/training/vacuum_pump/stl/pieces/'
-	output_dir = '/Users/georgye/Documents/repos/ethz/dslab25/training/vacuum_pump/images/original'
+	repo_dir = os.getcwd().split('dslab25')[0] + 'dslab25/'
+	stl_dir = os.path.join(repo_dir, "assets/vacuum_pump/stl/pieces")
+	output_dir = os.path.join(repo_dir, "assets/vacuum_pump/rendered")
 	if not os.path.exists(output_dir):
 		os.makedirs(output_dir)
 	main()
