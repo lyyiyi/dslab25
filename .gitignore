@@ -3,6 +3,9 @@ Datasubset/*
 venv/
 run.sh
 obj_detection/data
+obj_detection/dino/yolo11n.pt
+obj_detection/dino/yolo12l.pt
+obj_detection/dino/yolo12m.pt
 training/vacuum_pump/images/augmented
 training/vacuum_pump/annotation/augmented
 obj_detection/dino/final_model/*

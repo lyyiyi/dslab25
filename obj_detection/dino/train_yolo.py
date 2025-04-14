@@ -31,14 +31,26 @@ def create_yolo_dataset():
 		val_images = image_files[split_idx:]
 
 		# Copy training images and labels
+		print(len(train_images))
 		for image in train_images:
-			shutil.copy(os.path.join(images, folder, image), os.path.join(yolo_train_images, image))
-			shutil.copy(os.path.join(labels, folder, image.replace(".jpg", ".txt")), os.path.join(yolo_train_labels, image.replace(".jpg", ".txt")))
+			src_image = os.path.join(images, folder, image)
+			dst_image = os.path.join(yolo_train_images, image)
+			src_label = os.path.join(labels, folder, image.replace(".jpg", ".txt"))
+			dst_label = os.path.join(yolo_train_labels, image.replace(".jpg", ".txt"))
+			
+			if os.path.exists(src_image) and os.path.exists(src_label):
+				shutil.copy(src_image, dst_image)
+				shutil.copy(src_label, dst_label)
 
 		# Copy validation images and labels
 		for image in val_images:
-			shutil.copy(os.path.join(images, folder, image), os.path.join(yolo_val_images, image))
-			shutil.copy(os.path.join(labels, folder, image.replace(".jpg", ".txt")), os.path.join(yolo_val_labels, image.replace(".jpg", ".txt")))
+			src_image = os.path.join(images, folder, image)
+			dst_image = os.path.join(yolo_val_images, image)
+			src_label = os.path.join(labels, folder, image.replace(".jpg", ".txt"))
+			dst_label = os.path.join(yolo_val_labels, image.replace(".jpg", ".txt"))
+			if os.path.exists(src_image) and os.path.exists(src_label):
+				shutil.copy(src_image, dst_image)
+				shutil.copy(src_label, dst_label)
 
 	
 create_yolo_dataset()
@@ -63,7 +75,7 @@ model = YOLO(model_path)  # Load YOLOv12 model (Ultralytics must support it)
 
 model.train(
 	data=yaml_path,
-	epochs=10,
+	epochs=1,
 	imgsz=640,
 	batch=32,
 	name="yolov12_boundingbox",
