@@ -151,6 +151,13 @@ Zip folder without .git and venv:
 Send data on runpod:
 `runpodctl send data.txt`
 
+```
+sudo apt update
+sudo apt install pkg-config libcairo2-dev libgirepository1.0-dev python3-dev
+```
+
+## Preprocessing
+
 ### Augment images
 
 We do the following
@@ -162,11 +169,15 @@ We do the following
 First go to `obj_detection/preproccessing/augment.ipynb` and run the Rotate (Images) cell.
 Then go to roboflow and annotate them manually, then put them in `obj_detection/preproccessing/stage_0/labels` and run the rest of the
 
+## Running YOLO
+
+run `obj_detection/dion/train_yolo.py`
+
 ## Running Dino
 
-### Preprocessing
+### Create coco annotations
 
-You need to create a `coco.json` first. Run all cells of `obj_detection/dino/coco.ipynb` first.
+You need to create a `coco.json` for dino. Run all cells of `obj_detection/dino/coco.ipynb` first.
 
 ### Training
 
@@ -184,3 +195,7 @@ Run:
 - augment with scale and shear
 - blender one with and without random objects
 - randomize objects in each render in blender
+
+```
+
+```
