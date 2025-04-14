@@ -2,7 +2,8 @@ Datasubset/*
 .DS_Store
 venv/
 run.sh
-obj_detection/data
+obj_detection/dino/dinov2_finetune
+obj_detection/dino/yolo11n.pt
 obj_detection/dino/yolo11n.pt
 obj_detection/dino/yolo12l.pt
 obj_detection/dino/yolo12m.pt
@@ -11,3 +12,5 @@ training/vacuum_pump/annotation/augmented
 obj_detection/dino/final_model/*
 yolo_runs
 coco_annotations.json
+temp_images
+assets/vacuum_pump/eval

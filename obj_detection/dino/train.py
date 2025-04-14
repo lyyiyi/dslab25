@@ -14,7 +14,7 @@ training_dir = os.path.join(repo_dir, "training/vacuum_pump")
 image_dir = os.path.join(training_dir, "images/augmented")
 label_dir = os.path.join(training_dir, "annotation/augmented")
 coco_path = os.path.join(training_dir, "coco_annotations.json")
-pretrained_model = "facebook/dinov2-with-registers-base"
+pretrained_model = "facebook/dinov2-with-registers-large"
 
 def main():
 	# Determine device
@@ -37,7 +37,7 @@ def main():
 	
 	# Split the dataset into train and validation (80/20)
 	dataset = Dataset.from_dict(dataset_dict)
-	dataset = dataset.train_test_split(test_size=0.2, seed=42)
+	dataset = dataset.train_test_split(test_size=0.1, seed=42)
 	
 	print("Initializing Image Processor...")
 	processor = AutoImageProcessor.from_pretrained(pretrained_model)
