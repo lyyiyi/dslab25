@@ -153,7 +153,7 @@ Send data on runpod:
 
 ```
 sudo apt update
-sudo apt install pkg-config libcairo2-dev libgirepository1.0-dev python3-dev
+sudo apt install pkg-config libcairo2-dev libgirepository1.0-dev python3-dev zip unzip
 ```
 
 ## Preprocessing
