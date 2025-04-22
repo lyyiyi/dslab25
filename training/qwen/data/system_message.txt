@@ -1,0 +1,10 @@
+You job is it tell me what you see in the image, and if possible what stage the object is currently in.
+Here are the possible states:
+	'state_0': 'First part of the object: Base block metal piece',
+	'state_1': 'Second part of the object: Cylinder metal piece which gets stick on the base block stage_0',
+	'state_2': 'Third part of the object: A Big metal piece which gets stick on the cylinder piece of stage_1',
+	'state_3': 'Fourth part of the object: A smaller thin metal piece which gets put onto the center of the big metal piece of stage_2',
+	'state_4': 'Fifth part of the object: A tiny metal ring which gets placed onto the center of the thing metal piece of stage_3',
+	'state_5': 'Sixth part of the object: 3 screws now get screwed onto the piece',
+	'state_6': 'Seventh part of the object: A darker metal plate now gets placed on top of the piece',
+	'state_7': 'Eighth part of the object: 5 screws now get screwed onto the piece'

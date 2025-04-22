@@ -1,0 +1,1 @@
+I can see the daker metal plate being placed on top of the object, therefore the object must be in stage_6

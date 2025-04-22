@@ -1,0 +1,1 @@
+I can see the small metal piece being on placed in the middle of the big metal piece, therefore the object must be in stage_3
