@@ -13,4 +13,4 @@ obj_detection/dino/final_model/*
 yolo_runs
 coco_annotations.json
 temp_images
-assets/vacuum_pump/eval
+training/qwen
