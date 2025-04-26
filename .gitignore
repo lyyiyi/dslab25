@@ -20,3 +20,5 @@ training/vacuum_pump/annotation/augmented
 yolo_runs
 temp_images
 training/qwen
+qwen_2_5_vl_7b_ft
+lightning_logs

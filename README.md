@@ -153,7 +153,7 @@ Send data on runpod:
 
 ```
 sudo apt update
-sudo apt install pkg-config libcairo2-dev libgirepository1.0-dev python3-dev zip unzip
+sudo apt install pkg-config libcairo2-dev libgirepository1.0-dev python3-dev python3-setuptools zip unzip
 ```
 
 ## Preprocessing
@@ -190,10 +190,16 @@ Note you need to model weights in `obj_detection/dino/final_model`.
 Run:
 `python3 obj_detection/dino/eval.py`
 
+### Installing SAM2
+
+apt update
+apt install -y python3-setuptools
+pip install --upgrade pip setuptools wheel
+pip install --no-build-isolation iopath
+
 # TODO:
 
 - augment with scale and shear
-- blender one with and without random objects
 - randomize objects in each render in blender
 
 ```
