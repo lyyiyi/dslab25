@@ -268,7 +268,7 @@ def main():
 	texture_screws = {"color": [0.4, 0.4, 0.4, 1.0], "roughness": 0.65, "metallic": 1}
 	texture_axel = {"color": [0.04, 0.035, 0.03, 1.0], "roughness": 0.5, "metallic": 0.7}
 	texture_darker = {"color": [0.1, 0.1, 0.1, 1.0], "roughness": 0.65, "metallic": 0.9}
-	texture_hub = {"color": [0.2, 0.2, 0.2, 1.0], "roughness": 0.65, "metallic": 1.0}
+	texture_hub = {"color": [0.05, 0.05, 0.05, 1.0], "roughness": 0.6, "metallic": 1.0}
 	texture_plate = {"color": [0.00, 0.00, 0.00, 1], "roughness": 1.0, "metallic": 0}
 	
 	stl_files = [
@@ -288,7 +288,8 @@ def main():
 			(os.path.join(stl_dir, "4_diamond.stl"), texture_darker)
 		],
 		[
-			(os.path.join(stl_dir, "5_hub.stl"), texture_hub)
+			(os.path.join(stl_dir, "5_new.stl"), texture_hub)
+			# (os.path.join(stl_dir, "5_hub.stl"), texture_hub)
 		], 
 		[
 			(os.path.join(stl_dir, "6_screws_01.stl"), texture_screws, True),
@@ -336,7 +337,8 @@ def main():
 			curr_stls += [(item[0], item[1], 1) for item in stl_group]
 		else:
 			curr_stls += stl_group
-			process_assembly(curr_stls, stage, unused_items=scatter_selection)
+			if stage == 5:
+				process_assembly(curr_stls, stage, unused_items=scatter_selection)
 	
 	print("Rendering complete!")
 

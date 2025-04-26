@@ -160,7 +160,7 @@ def main():
 		[(os.path.join(stl_dir,"3_middle_part.stl"),base),
 		 (os.path.join(stl_dir,"3_middle.stl"),base)],
 		[(os.path.join(stl_dir,"4_diamond.stl"),dark)],
-		[(os.path.join(stl_dir,"5_hub.stl"),hub)],
+		[(os.path.join(stl_dir,"5_new.stl"),hub)],
 		[(os.path.join(stl_dir,"6_screws_01.stl"),screws,True),
 		 (os.path.join(stl_dir,"6_screws_02.stl"),screws,True),
 		 (os.path.join(stl_dir,"6_screws_03.stl"),screws,True)],
