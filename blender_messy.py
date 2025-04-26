@@ -337,7 +337,7 @@ def main():
 			curr_stls += [(item[0], item[1], 1) for item in stl_group]
 		else:
 			curr_stls += stl_group
-			if stage == 5:
+			if stage == 4:
 				process_assembly(curr_stls, stage, unused_items=scatter_selection)
 	
 	print("Rendering complete!")
