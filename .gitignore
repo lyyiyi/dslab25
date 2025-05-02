@@ -12,6 +12,7 @@ obj_detection/dino/yolo11n.pt
 obj_detection/dino/yolo12l.pt
 obj_detection/dino/yolo12m.pt
 obj_detection/dino/final_model/*
+obj_detection/binary_cls/wandb
 
 coco_annotations.json
 
