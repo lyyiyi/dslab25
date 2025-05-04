@@ -162,7 +162,7 @@ rfc3339-validator==0.1.4
 rfc3986-validator==0.1.1
 rpds-py==0.20.0
 safetensors==0.5.3
--e git+https://github.com/facebookresearch/sam2.git@2b90b9f5ceec907a1c18123530e92e794ad901a4#egg=SAM_2
+-e git+https://github.com/facebookresearch/edgetam.git
 scikit-learn==1.6.1
 scipy==1.15.2
 seaborn==0.13.2
