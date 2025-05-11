@@ -12,6 +12,8 @@ obj_detection/dino/yolo11n.pt
 obj_detection/dino/yolo12l.pt
 obj_detection/dino/yolo12m.pt
 obj_detection/dino/final_model/*
+obj_detection/dino/sam2_local
+obj_detection/dino/temp_results
 
 coco_annotations.json
 

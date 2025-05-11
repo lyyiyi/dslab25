@@ -88,6 +88,44 @@ run training script using
 
 `sbatch run.sh`
 
+## Frame Rejection using IoU and Scale Threshold from SAM
+
+Run `dslab25/obj_detection/dino/inference.py` to obtain the results.
+
+If using the student cluster, you can simply run the following instead (from home directory):
+```
+sbatch dslab25/inference.sh --env dsl --script dslab25/obj_detection/dino/inference.py
+```
+
+Frame rejection logic:
+0. We use two references: the render and a "clean image" (frame 70, in 5fps video). Ideally, we could have a static image in the database of the object to be tracked, instead of hard-coding the clean image, but this is minor and can be adapted for future uses.
+1. Perform terative scale-adaptive ICP to match the segmentation of the current object with the reference object's render.
+2. Calculate the IoU btw. current cropped object and cropped reference object.
+3. Reject frames based on IoU (the higher the IoU, the better it matches) and the scale that was used to scale the current object to the clean-image-object-size.
+4. Perform classification on ACCEPTED frames only using DINO.
+5. Obtain metrics on ACCEPTED frames only.
+
+For example,
+
+the clean image object was rescaled with 0.65 with respect to the countour of the render reference object. Thus, in a video setting, we would reject objects where the scale varies too much (`scale_threshold`).
+
+Similarly, if the object does not look alike to the render reference object, then its IoU will be small. We reject based on an `iou_threshold`.
+
+
+The output video can be found in: `/work/courses/dslab/team14/videos/sam_boxed_5fps_0.6iouthresh_0.1scaletol.mp4`, where red = rejected and green = accepted.
+ 
+
+For analysis of the masks, run:
+```
+dslab25/obj_detection/dino/masks_analysis.ipynb
+```
+
+For analysis of the results obtained from the SAM-DINO-Frame-rejection-pipeline, run:
+```
+dslab25/obj_detection/dino/analysis/analysis.ipynb
+```
+Here, you will find useful sliders and plots that show the rejected/accepted frames, their logits, predictions etc. 
+
 ## Blender
 
 ### Textures given to us by the challenger giver:
