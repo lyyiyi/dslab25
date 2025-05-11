@@ -1,5 +1,5 @@
 import os
-
+import random
 import cv2
 import imageio
 from IPython.display import Video
@@ -15,11 +15,13 @@ import torch.nn.functional as F
 from transformers import AutoModel, AutoImageProcessor
 from tqdm import tqdm
 
-from utils import compute_metrics, crop_mask, DINOv2Classifier, \
-    get_aligned_iou, get_feat, load_frame_rgb, load_labels, read_video_rgb
-
+from utils import compute_metrics, crop_mask, DINOv2Classifier, get_aligned_iou, \
+    get_feat, load_frame_rgb, load_labels, read_video_rgb, set_seed
 
 if __name__ == "__main__":
+    # Set a fixed seed for deterministic behavior
+    set_seed(42)
+
     # 1. CONFIGURATION
     print("\n---------------- 1. CONFIGURATION ----------------")
     fps_video = 5
@@ -341,4 +343,4 @@ if __name__ == "__main__":
     # ── 10. SAVE VIDEO ───────────────────────────────────────────────────────
     print("\n---------------- 10. SAVE VIDEO ----------------")
     Video(boxed_out, embed=True, width=min(W, 640))
-    
+
