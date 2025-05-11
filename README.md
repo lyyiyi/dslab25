@@ -90,11 +90,11 @@ run training script using
 
 ## Frame Rejection using IoU and Scale Threshold from SAM
 
-Run `dslab25/obj_detection/dino/test_combo_sam_yiyi.py` to obtain the results.
+Run `dslab25/obj_detection/dino/inference.py` to obtain the results.
 
-If using the student cluster, you can simply run the following instead, using `--env <conda_env_name>`:
+If using the student cluster, you can simply run the following instead (from home directory):
 ```
-sbatch dslab25/run.sh --env dsl --script dslab25/obj_detection/dino/test_combo_sam_yiyi.py
+sbatch dslab25/inference.sh --env dsl --script dslab25/obj_detection/dino/inference.py
 ```
 
 Frame rejection logic:
