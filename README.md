@@ -113,18 +113,11 @@ Similarly, if the object does not look alike to the render reference object, the
 
 
 The output video can be found in: `/work/courses/dslab/team14/videos/sam_boxed_5fps_0.6iouthresh_0.1scaletol.mp4`, where red = rejected and green = accepted.
- 
 
-For analysis of the masks, run:
+To **test** the framerejection framework and obtain the confusion matrix for a video, run (from home directory):
 ```
-dslab25/obj_detection/dino/masks_analysis.ipynb
+sbatch dslab25/inference.sh --script dslab25/obj_detection/dino/test_frame_rejection.py
 ```
-
-For analysis of the results obtained from the SAM-DINO-Frame-rejection-pipeline, run:
-```
-dslab25/obj_detection/dino/analysis/analysis.ipynb
-```
-Here, you will find useful sliders and plots that show the rejected/accepted frames, their logits, predictions etc. 
 
 ## Blender
 
