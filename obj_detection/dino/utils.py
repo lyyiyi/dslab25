@@ -368,3 +368,36 @@ def compute_metrics(results):
         "recall": recall,
         "f1": f1
     }
+
+
+def load_occlusion_labels(filepath, num_frames=None):
+    """
+    Load occlusion labels from a file and create a boolean occlusion mask.
+    Args:
+        filepath (str): Path to the file with occlusion intervals (start and end frames per line).
+        num_frames (int, optional): Total number of frames. Defaults to the highest end frame + 1.
+    Returns:
+        numpy.ndarray: Boolean array where `True` indicates occluded frames.
+    """
+    occlusion_intervals = []
+    with open(filepath, 'r') as f:
+        for line in f:
+            parts = line.strip().split()
+            if len(parts) == 2:
+                start_frame, end_frame = int(parts[0]), int(parts[1])
+                occlusion_intervals.append((start_frame, end_frame))
+
+    # Case when no frames are occluded
+    if not occlusion_intervals:
+        return np.zeros(num_frames or 0, dtype=bool)
+
+    # Determine the number of frames if not provided
+    if num_frames is None:
+        num_frames = occlusion_intervals[-1][1] + 1
+
+    # Create a boolean mask for occluded frames
+    occlusion_mask = np.zeros(num_frames, dtype=bool)
+    for start_frame, end_frame in occlusion_intervals:
+        occlusion_mask[start_frame:end_frame + 1] = True
+
+    return occlusion_mask
