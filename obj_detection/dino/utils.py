@@ -283,6 +283,7 @@ def contour_to_mask(shape, contour):
 
 def get_aligned_iou(mask, mask_ref, max_points=200):
     """
+    Deprecated: use get_best_iou instead
     mask: mask of the current object to be matched to the mask of reference object (mask_ref)
     """
     mask1 = crop_mask(mask_ref)
@@ -335,13 +336,15 @@ def plot_contours(*contours, colors=None, labels=None, figsize=(6, 6), title="Co
     plt.show()
 
 
-def compute_metrics(results):
+def compute_metrics(results, merge_classes=None):
     """
     Computes accuracy, precision, recall, and F1-score for multi-class classification,
-    considering only frames with 'rejected' == False.
+    with optional merging of specific classes.
 
     Args:
         results (dict): Dictionary of frame results keyed by frame ID (e.g., '25').
+        merge_classes (list of tuples, optional): List of class pairs to merge. 
+            For example, [(3, 4), (6, 7)] will merge classes 3 & 4 and 6 & 7.
 
     Returns:
         dict: Dictionary containing accuracy, precision, recall, and F1-score.
@@ -356,6 +359,16 @@ def compute_metrics(results):
 
     if not y_true:
         return {"accuracy": None, "precision": None, "recall": None, "f1": None}
+
+    # Apply class merging if specified
+    if merge_classes:
+        merge_map = {}
+        for pair in merge_classes:
+            for cls in pair:
+                merge_map[cls] = pair[0]  # Map all classes in the pair to the first class
+
+        y_true = [merge_map.get(cls, cls) for cls in y_true]
+        y_pred = [merge_map.get(cls, cls) for cls in y_pred]
 
     accuracy = accuracy_score(y_true, y_pred)
     precision, recall, f1, _ = precision_recall_fscore_support(
@@ -401,3 +414,62 @@ def load_occlusion_labels(filepath, num_frames=None):
         occlusion_mask[start_frame:end_frame + 1] = True
 
     return occlusion_mask
+
+def rotate_contour(contour, angle):
+    """Rotate contour by a given angle (in radians) around its centroid."""
+    angle = np.radians(angle)
+    rotation_matrix = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
+    contour = contour @ rotation_matrix.T
+
+    # Translate the contour so that the top-left corner of its bounding box is at (0, 0)
+    min_x, min_y = np.min(contour, axis=0)
+    contour -= [min_x, min_y]
+
+    return contour
+
+def get_best_iou(mask1, mask2):
+    """
+    mask1: mask of the current object to be matched to the mask of reference object (mask_ref)
+    rotate mask1 to find the best iou with mask2 (ref_mask)
+
+    Reinitailizes ICP for each rotation which is beneficial for performance -> avoids falling into local minima.
+    """
+    mask1 = crop_mask(mask1)
+    mask2 = crop_mask(mask2)
+
+    contour1 = get_largest_contour(mask1)
+    contour2 = get_largest_contour(mask2)
+    if contour1 is None or contour2 is None:
+        return 0.0
+
+    iou = []
+    trans = []
+    for angle in range(0,360,90):
+        rot_contour = rotate_contour(contour2, angle)
+        N = min(len(contour1), len(rot_contour), 200)
+        idx1 = np.linspace(0, len(contour1) - 1, N).astype(int)
+        idx2 = np.linspace(0, len(rot_contour) - 1, N).astype(int)
+        points1 = contour1[idx1]
+        points2 = rot_contour[idx2]
+
+        tran, aligned_points2 = icp(
+            reference_points=points1,
+            points=points2,
+            max_iterations=200,
+            point_pairs_threshold=N//10,
+            distance_threshold=150,
+            convergence_translation_threshold=1e-3,
+            convergence_rotation_threshold=1e-4,
+            convergence_scale_threshold=1e-3,
+            verbose=False
+        )
+
+        aligned_mask2 = contour_to_mask(mask1.shape, aligned_points2)
+
+        intersection = np.logical_and(mask1, aligned_mask2).sum()
+        union = np.logical_or(mask1, aligned_mask2).sum()
+        res = intersection / union if union > 0 else 0.0
+        iou.append(res)
+        trans.append(tran)
+    #return the highest iou
+    return max(iou), trans[iou.index(max(iou))]

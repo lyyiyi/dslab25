@@ -15,7 +15,7 @@ import torch.nn.functional as F
 from transformers import AutoModel, AutoImageProcessor
 from tqdm import tqdm
 
-from utils import compute_metrics, crop_mask, DINOv2Classifier, get_aligned_iou, \
+from utils import compute_metrics, crop_mask, DINOv2Classifier, get_best_iou, \
     get_feat, load_frame_rgb, load_labels, read_video_rgb, set_seed
 
 if __name__ == "__main__":
@@ -242,7 +242,7 @@ if __name__ == "__main__":
                 # ----- FRAME REJECTION ------------------------------------------------
                 # Perform frame rejection based on boolean masks IoU
                 mask_cropped = crop_mask(mask2d.cpu().numpy())
-                iou, trans = get_aligned_iou(mask_cropped, mask_ref)
+                iou, trans = get_best_iou(mask_ref, mask_cropped)
                 scale = trans['scale']
 
                 iou_reject = bool(iou is None or iou < iou_threshold)
