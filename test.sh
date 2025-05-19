@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --time=24:00:00
-#SBATCH --account=dslab
+#SBATCH --account=dslab_jobs
 #SBATCH --mincpus=1
 #SBATCH --gpus=1
 
@@ -66,7 +66,7 @@ for label_file in "$VIDEO_DIR"/*_labels_5fps.txt; do
                 --video_path "$video_path" \
                 --subject "$subject" \
                 --run "$run" > "$output_file" 2>&1; then
-                echo "Python script failed for subject $subject run $run. Skipping..."
+                echo "Python script failed for subject $subject run $run. Skipping...\n"
             fi
         else
             echo "Missing video for subject $subject run $run"

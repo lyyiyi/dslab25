@@ -15,9 +15,8 @@ from torch.cuda.amp import autocast
 import torch.nn.functional as F
 from transformers import AutoModel, AutoImageProcessor
 from tqdm import tqdm
-import time
 
-from utils import compute_metrics, crop_mask, DINOv2Classifier, get_aligned_iou, \
+from utils import compute_metrics, crop_mask, DINOv2Classifier, get_best_iou, \
     get_feat, load_frame_rgb, load_labels, read_video_rgb, set_seed
 
 if __name__ == "__main__":
@@ -34,15 +33,17 @@ if __name__ == "__main__":
     # 1. CONFIGURATION
     print("\n---------------- 1. CONFIGURATION ----------------")
     fps_video = 5
-    iou_threshold = 0.6 
+    iou_threshold = 0.6
     expected_scale = 0.65
-    scale_tolerance = 0.1
+    scale_tolerance = 0.2
 
     subject = args.subject
     run = args.run
     video_path = args.video_path
     labels_file = args.labels_file
     video = os.path.basename(video_path)
+    # subject = 8
+    # run = 1
 
     print(f"Config for subject {subject}, run {run}")
     print(f"Video file: {video}")
@@ -51,12 +52,17 @@ if __name__ == "__main__":
     DATA_DIR = '/work/courses/dslab/team14/'
     repo_dir = os.getcwd().split('dslab25')[0] + '/dslab25/'
     model_dir = os.path.join(DATA_DIR, 'ckpt/dino/')
+    # video_path = os.path.join(DATA_DIR, f"videos/input_video/{subject:02d}_run{run}_cam_2_5fps.mp4")
+    # labels_file = os.path.join(DATA_DIR, f"videos/input_video/{subject:02d}_run{run}_labels_5fps.txt")
     frames_dir = os.path.join(DATA_DIR, f'videos/frames/{subject:02d}/run{run}')
     boxed_out = os.path.join(DATA_DIR, f"videos/output/videos/{subject:02d}_run{run}_out.mp4")
     mask_ref_path = os.path.join(repo_dir, "obj_detection/dino/", "ref_mask.pkl")
     safetensors_path = os.path.join(model_dir, "dino_fine_tuned.safetensors")
     bin_path = os.path.join(model_dir, "training_args.bin") 
     OUT_PATH = os.path.join(DATA_DIR, f"videos/output/preds/{subject:02d}_run{run}.pkl")
+
+    # temp_results_dir = os.path.join(repo_dir,f"obj_detection/dino/temp_masks/{subject:02d}/run{run}")
+    # os.makedirs(temp_results_dir, exist_ok=True)
 
 
     # os.makedirs(temp_images_dir, exist_ok=True)
@@ -82,7 +88,7 @@ if __name__ == "__main__":
 
     # ── 3. EXTRACT FRAMES FROM THE VIDEO ────────────────────────────────────────────────────────────
     print("\n---------------- 3. EXTRACT FRAMES FROM THE VIDEO ----------------")
-    frame_paths, FPS = read_video_rgb(video_path, output_dir=frames_dir, use_cached=False)
+    frame_paths, FPS = read_video_rgb(video_path, output_dir=frames_dir, use_cached=True)
     H, W = load_frame_rgb(0, base_path=frames_dir).shape[:2]
 
     # ── 4. INITIALISE MODELS ────────────────────────────────────────────────────
@@ -95,7 +101,7 @@ if __name__ == "__main__":
 
     # DINO
     frame_to_class = load_labels(labels_file)
-    num_labels = max(frame_to_class.values()) + 1 if frame_to_class else 8
+    num_labels = 8
     pretrained_model = "facebook/dinov2-with-registers-base"
     processor = AutoImageProcessor.from_pretrained(pretrained_model)
     model = DINOv2Classifier(num_labels=num_labels, pretrained_model=pretrained_model)
@@ -148,8 +154,9 @@ if __name__ == "__main__":
     yolo_model_path = os.path.join(DATA_DIR, "ckpt/yolo/best.pt")
     yolo_model = YOLO(yolo_model_path)
     seed_frame_idx = None
-    for frame_idx in range(100):
-        if frame_idx % 5 != 0:
+    start_frame = min(frame_to_class.keys())
+    for frame_idx in range(start_frame, start_frame+100): #loop through the first 20 seconds of the video
+        if frame_idx % 2 != 0:
             continue  
         idx = frame_idx
         frame = load_frame_rgb(frame_idx, base_path=frames_dir)
@@ -180,68 +187,36 @@ if __name__ == "__main__":
         if best_sim > 0.6:
             seed_frame_idx = frame_idx
             print(f"Seed frame found: {seed_frame_idx}")
+            yolo_x1, yolo_y1, yolo_x2, yolo_y2 = x1, y1, x2, y2
             break
         if best_m is None:
             raise RuntimeError("No mask matched the reference images!")
         
     assert seed_frame_idx is not None, "No seed frame found! Process ended."
-        
-    # ── 7. SELECT BEST MASK ON SEED FRAME BY COS-SIM ─────────────────────────────────────────────
-    print("\n---------------- 7. SELECT BEST MASK ON SEED FRAME BY COS-SIM ----------------")
-    seed_frame = load_frame_rgb(seed_frame_idx, base_path=frames_dir)
-    mask_gen = SAM2AutomaticMaskGenerator(
-        img_pred.model,
-        points_per_side=32,
-        pred_iou_thresh=0.7,		  # only keep masks with IoU-pred confidence ≥ 0.7
-        stability_score_thresh=0.9,   # only keep very stable masks
-        box_nms_thresh=0.3,		   # merge overlapping boxes more aggressively
-        min_mask_region_area=1000	 # drop very small regions
-    )
-    masks = mask_gen.generate(seed_frame)
 
-    best_m, best_sim = None, -1.0
-    for m in tqdm(masks):
-        x_f, y_f, w_f, h_f = m["bbox"]
-        print(f"bbox size (x,y,w,h): ({x_f}, {y_f}, {w_f}, {h_f})")
-        x0 = max(0, int(round(x_f)))
-        y0 = max(0, int(round(y_f)))
-        x1 = min(W, int(round(x_f + w_f)))
-        y1 = min(H, int(round(y_f + h_f)))
-        if x1 <= x0 or y1 <= y0:
-            print("[Warning] No bounding box found.")
-            continue
-
-        crop = seed_frame[y0:y1, x0:x1]
-        if crop.size == 0:
-            print("[Warning] Crop.size == 0")
-            continue
-
-        feat = get_feat(crop, dinov2_proc, dinov2_backbone, device=device)
-        sims = torch.stack(ref_feats) @ feat	 # [n_refs]
-        sim  = sims.max().item()
-        if sim > best_sim:
-            best_m, best_sim = m, sim
-
-    if best_m is None:
-        raise RuntimeError("No mask matched the reference images!")
-
-    mask0 = torch.from_numpy(best_m["segmentation"]).to(device).bool()
-    print("Shape of mask0:", mask0.shape)
-
-# ── 8. TRACK & DRAW BOX (SKIPPING FIRST 70 FRAMES) ──────────────────────────
+# ── 7. TRACK & DRAW BOX (SKIPPING FIRST 70 FRAMES) ──────────────────────────
     # --- use the MP4 path rather than a tensor ---
     print("\n---------------- 8. TRACK & DRAW BOX (SKIPPING FIRST 70 FRAMES) ----------------")
     del yolo_model
     del dinov2_backbone
     del dinov2_proc
     del ref_feats
-    del seed_frame
 
     with open(mask_ref_path, 'rb') as f:
         mask_ref = crop_mask(pickle.load(f))
     state = vid_pred.init_state(video_path=video_path, offload_video_to_cpu=False, async_loading_frames=False)
     print("Initialized video predictor.")
-    vid_pred.add_new_mask(state, frame_idx=seed_frame_idx, mask=mask0, obj_id=0)
+    # vid_pred.add_new_mask(state, frame_idx=seed_frame_idx, mask=mask0, obj_id=0)
+    vid_pred.add_new_points_or_box(
+        state,
+        frame_idx=seed_frame_idx,
+        obj_id=0,
+        points=None,
+        labels=None,
+        clear_old_points=True,
+        normalize_coords=True,
+        box=np.array([yolo_x1, yolo_y1, yolo_x2, yolo_y2], dtype=np.float32),
+    )
     print("Video predictor done.")
     writer = imageio.get_writer(
         boxed_out,
@@ -269,6 +244,7 @@ if __name__ == "__main__":
 
     # ----------------------------------------------------------
     preds = {} # store all predictions
+    last_label = None
     with torch.inference_mode(), torch.autocast(device_type=device, dtype=torch.bfloat16):
         for f_idx, _, logits in tqdm(vid_pred.propagate_in_video(state)):
             if f_idx < seed_frame_idx: 
@@ -282,7 +258,7 @@ if __name__ == "__main__":
 
             # # TODO: Delete this
             # import pickle
-            # with open(os.path.join(temp_results_dir, f'masks/video/frame_{f_idx}.pkl'), 'wb') as f:
+            # with open(os.path.join(temp_results_dir, f'frame_{f_idx}.pkl'), 'wb') as f:
             #     pickle.dump(mask2d.cpu().numpy(), f)
             
             if mask2d.any():
@@ -293,7 +269,7 @@ if __name__ == "__main__":
                 # ----- FRAME REJECTION ------------------------------------------------
                 # Perform frame rejection based on boolean masks IoU
                 mask_cropped = crop_mask(mask2d.cpu().numpy())
-                iou, trans = get_aligned_iou(mask_cropped, mask_ref)
+                iou,trans = get_best_iou(mask_ref, mask_cropped)
                 scale = trans['scale']
 
                 iou_reject = bool(iou is None or iou < iou_threshold)
@@ -321,7 +297,12 @@ if __name__ == "__main__":
                     probs = torch.softmax(cls_logits, dim=-1)
                     predicted_label = probs.argmax().item()
 
-                    true_label = frame_to_class[f_idx]
+                    # Adjust true label for the last frames (when labels are not available anymore)
+                    if f_idx in frame_to_class:
+                        true_label = frame_to_class[f_idx]
+                        last_label = true_label
+                    else:
+                        true_label = last_label
 
                     preds[str(f_idx)] = {
                         "logits": probs.cpu().tolist(),
@@ -395,106 +376,3 @@ if __name__ == "__main__":
     print("\n---------------- 10. SAVE VIDEO ----------------")
     Video(boxed_out, embed=True, width=min(W, 640))
     print("Good job Yi-Yi.")
-
-
-
-
-
-
-
-
-
-
-    #     img_pred = SAM2ImagePredictor.from_pretrained("facebook/sam2.1-hiera-tiny")
-    # vid_pred = SAM2VideoPredictor.from_pretrained("facebook/sam2.1-hiera-tiny")
-
-    # # DINO
-    # frame_to_class = load_labels(labels_file)
-    # num_labels = max(frame_to_class.values()) + 1 if frame_to_class else 8
-    # pretrained_model = "facebook/dinov2-with-registers-base"
-    # processor = AutoImageProcessor.from_pretrained(pretrained_model)
-    # model = DINOv2Classifier(num_labels=num_labels, pretrained_model=pretrained_model)
-    # model_weights_path = None
-    # if os.path.exists(safetensors_path):
-    #     model_weights_path = safetensors_path
-    # elif os.path.exists(bin_path):
-    #     model_weights_path = bin_path
-    
-    # if model_weights_path:
-    #     print(f"Loading model weights from: {model_weights_path}")
-    #     try:
-    #         if model_weights_path.endswith(".safetensors"):
-    #             state_dict = load_safetensors(model_weights_path, device=str(device))
-    #         else:
-    #             state_dict = torch.load(model_weights_path, map_location=str(device), weights_only=True)
-                
-    #         # Handle potential DDP prefix
-    #         if next(iter(state_dict)).startswith('module.'):
-    #             state_dict = {k.partition('module.')[2]: v for k,v in state_dict.items()}
-
-    #         model.load_state_dict(state_dict)
-    #     except Exception as e:
-    #         raise e
-    # else:
-    #     raise Exception(f"Error: Model weights not found in {model_dir}")
-        
-    # model.to(device)
-    # model.eval()
-    # print(f"Successfully transferred model to device: {device}.")
-
-
-    # # ── 5. REFERENCE EMBEDDINGS ─────────────────────────────────────────────────
-    # print("\n---------------- 5. REFERENCE EMBEDDINGS ----------------")
-    # ref_feats = []
-    # for p in tqdm(refs):
-    #     bgr = cv2.imread(p)
-    #     if bgr is None:
-    #         raise IOError(f"cannot open reference image {p}")
-    #     rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
-    #     ref_feat = get_feat(rgb, dinov2_proc, dinov2_backbone, device=device)
-    #     ref_feats.append(ref_feat)
-    # print("Shape ref_feats:", ref_feats[0].shape)
-
-    # # ── 6. AUTO MASKS ON SEED FRAME ─────────────────────────────────────────────
-    # print("\n---------------- 6. AUTO MASKS ON SEED FRAME ----------------")
-    # seed_frame = load_frame_rgb(skip_frames, base_path=frames_dir)
-    # mask_gen = SAM2AutomaticMaskGenerator(
-    #     img_pred.model,
-    #     points_per_side=32,
-    #     pred_iou_thresh=0.7,		  # only keep masks with IoU-pred confidence ≥ 0.7
-    #     stability_score_thresh=0.9,   # only keep very stable masks
-    #     box_nms_thresh=0.3,		   # merge overlapping boxes more aggressively
-    #     min_mask_region_area=1000	 # drop very small regions
-    # )
-    # start_time = time.time()
-    # masks = mask_gen.generate(seed_frame)
-    # print(f"Time taken to generate masks: {time.time() - start_time:.2f} seconds")
-
-    # # ── 7. PICK BEST MASK BY COS-SIM ────────────────────────────────────────────
-    # print("\n---------------- 7. PICK BEST MASK BY COS-SIM ----------------")
-    # best_m, best_sim = None, -1.0
-    # for m in tqdm(masks):
-    #     x_f, y_f, w_f, h_f = m["bbox"]
-    #     print(f"bbox size (x,y,w,h): ({x_f}, {y_f}, {w_f}, {h_f})")
-    #     x0 = max(0, int(round(x_f)))
-    #     y0 = max(0, int(round(y_f)))
-    #     x1 = min(W, int(round(x_f + w_f)))
-    #     y1 = min(H, int(round(y_f + h_f)))
-    #     if x1 <= x0 or y1 <= y0:
-    #         print("[Warning] No bounding box found.")
-    #         continue
-
-    #     crop = seed_frame[y0:y1, x0:x1]
-    #     if crop.size == 0:
-    #         print("[Warning] Crop.size == 0")
-    #         continue
-
-    #     feat = get_feat(crop, dinov2_proc, dinov2_backbone, device=device)
-    #     sims = torch.stack(ref_feats) @ feat	 # [n_refs]
-    #     sim  = sims.max().item()
-    #     if sim > best_sim:
-    #         print(f"Best sim: {sim:.3f} (ref {sims.argmax().item()})")
-    #         best_m, best_sim = m, sim
-
-    # if best_m is None:
-    #     raise RuntimeError("No mask matched the reference images!")
