@@ -88,6 +88,16 @@ run training script using
 
 `sbatch run.sh`
 
+## Run whole pipeline (extract seedfram -> frame rej -> inference)
+
+Run `dslab25/obj_detection/dino/pipeline.py` to:
+1. obtain the seedframe using cosimilarity search on DINO features on bounding boxes of YOLO and reference object
+2. perform SAM tracking starting seed frame that was found
+3. frame rejection based on IoU
+4. inference using DINO
+
+Results can be analyzed in `dslab25/obj_detection/dino/final_results.ipynb`.
+
 ## Frame Rejection using IoU and Scale Threshold from SAM
 
 Run `dslab25/obj_detection/dino/inference.py` to obtain the results.
