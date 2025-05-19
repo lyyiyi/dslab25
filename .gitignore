@@ -24,3 +24,5 @@ temp_images
 training/qwen
 qwen_2_5_vl_7b_ft
 lightning_logs
+
+obj_detection/dino/temp_masks/*
