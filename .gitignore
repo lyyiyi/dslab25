@@ -13,6 +13,11 @@ obj_detection/dino/yolo12l.pt
 obj_detection/dino/yolo12m.pt
 obj_detection/dino/final_model/*
 obj_detection/binary_cls/wandb
+obj_detection/dino/blur
+obj_detection/dino/canny
+obj_detection/dino/contours
+obj_detection/dino/masks
+
 
 coco_annotations.json
 

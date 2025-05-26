@@ -1,0 +1,81 @@
+Running on host: studgpu-node02.inf.ethz.ch
+In directory: /home/owendu/dslab25/obj_detection/dino
+Starting on: Thu May 22 22:45:10 CEST 2025
+SLURM_JOB_ID: 38684
+Loading labels from: /work/courses/dslab/team14/videos/01_run1_simplified_5fps.txt
+Loading image processor for classifier...
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+Using device: cuda
+Number of classes: 8
+Loading classifier model...
+Some weights of Dinov2WithRegistersForImageClassification were not initialized from the model checkpoint at facebook/dinov2-with-registers-base and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+Loading model weights from: /work/courses/dslab/team14/dino/final_model/model.safetensors
+ref_dir /work/courses/dslab/team14/training/vacuum_pump/images/cropped/
+Video Info: 1600x1200 @ 5fps, 619 frames
+Loading DINOv2 backbone for SAM...
+Loading DINOv2 processor for SAM...
+Loading SAM2 Image Predictor...
+Loading SAM2 Video Predictor...
+Calculating reference embeddings...
+Seeking to seed frame 31...
+Generating masks on seed frame...
+/home/owendu/sam2/sam2/sam2_image_predictor.py:431: UserWarning: cannot import name '_C' from 'sam2' (/home/owendu/sam2/sam2/__init__.py)
+
+Skipping the post-processing step due to the error above. You can still use SAM 2 and it's OK to ignore the error above, although some post-processing functionality may be limited (which doesn't affect the results in most cases; see https://github.com/facebookresearch/sam2/blob/main/INSTALL.md).
+  masks = self._transforms.postprocess_masks(
+Generated 12 masks.
+Finding best initial mask...
+sim 0: 0.27490872144699097
+sim 1: 0.22020652890205383
+sim 2: 0.7842846512794495
+sim 3: 0.42884746193885803
+sim 4: 0.6206579804420471
+sim 5: 0.3467009961605072
+sim 6: 0.27844884991645813
+sim 7: 0.279649555683136
+sim 8: 0.3758343756198883
+sim 9: 0.25861310958862305
+sim 10: 0.19885669648647308
+sim 11: 0.16517274081707
+Best initial mask found with similarity: 0.7843
+Label probs for mask 0: [[0.547  0.4534]]
+Label probs for mask 1: [[0.4036 0.596 ]]
+Label probs for mask 2: [[0.1052 0.895 ]]
+Label probs for mask 3: [[0.1009 0.899 ]]
+Label probs for mask 4: [[0.15 0.85]]
+Label probs for mask 5: [[0.4417 0.558 ]]
+Label probs for mask 6: [[0.3774 0.6226]]
+Label probs for mask 7: [[0.3923 0.6074]]
+Label probs for mask 8: [[0.699  0.3008]]
+Label probs for mask 9: [[0.3594 0.6406]]
+Label probs for mask 10: [[0.269 0.731]]
+Label probs for mask 11: [[0.457 0.543]]
+Initial mask saved to: initial_mask_visualization.png
+Initial mask saved to: hand.png
+Freeing memory from CLIP model...
+Initializing video writer...
+Initializing SAM2 video state...
+/home/owendu/sam2/sam2/sam2_video_predictor.py:786: UserWarning: cannot import name '_C' from 'sam2' (/home/owendu/sam2/sam2/__init__.py)
+
+Skipping the post-processing step due to the error above. You can still use SAM 2 and it's OK to ignore the error above, although some post-processing functionality may be limited (which doesn't affect the results in most cases; see https://github.com/facebookresearch/sam2/blob/main/INSTALL.md).
+  pred_masks_gpu = fill_holes_in_mask_scores(
+Added initial mask at frame 31 to tracker.
+Freeing more memory before inference...
+Starting frame-by-frame propagation, classification, and writing...
+propagate in video:   0%|          | 0/588 [00:00<?, ?it/s]Multiple -pix_fmt options specified for stream 0, only the last option '-pix_fmt yuv420p' will be used.
+propagate in video:   0%|          | 1/588 [00:00<08:39,  1.13it/s]propagate in video:   0%|          | 2/588 [00:01<07:52,  1.24it/s]propagate in video:   1%|          | 3/588 [00:02<07:52,  1.24it/s]propagate in video:   1%|          | 4/588 [00:03<07:52,  1.24it/s]propagate in video:   1%|          | 5/588 [00:04<08:02,  1.21it/s]propagate in video:   1%|          | 6/588 [00:05<08:13,  1.18it/s]propagate in video:   1%|          | 7/588 [00:05<08:14,  1.17it/s]propagate in video:   1%|▏         | 8/588 [00:06<08:39,  1.12it/s]propagate in video:   2%|▏         | 9/588 [00:07<08:45,  1.10it/s]propagate in video:   2%|▏         | 10/588 [00:08<08:43,  1.10it/s]propagate in video:   2%|▏         | 11/588 [00:09<08:38,  1.11it/s]propagate in video:   2%|▏         | 12/588 [00:10<08:45,  1.10it/s]propagate in video:   2%|▏         | 13/588 [00:11<08:50,  1.08it/s]propagate in video:   2%|▏         | 14/588 [00:12<08:54,  1.07it/s]propagate in video:   3%|▎         | 15/588 [00:13<08:51,  1.08it/s]propagate in video:   3%|▎         | 16/588 [00:14<09:01,  1.06it/s]propagate in video:   3%|▎         | 17/588 [00:15<09:05,  1.05it/s]propagate in video:   3%|▎         | 18/588 [00:16<08:53,  1.07it/s]propagate in video:   3%|▎         | 19/588 [00:17<09:38,  1.02s/it]propagate in video:   3%|▎         | 20/588 [00:18<09:39,  1.02s/it]propagate in video:   3%|▎         | 20/588 [00:48<22:58,  2.43s/it]
+Reached 50 frames, creating new video segment...
+Traceback (most recent call last):
+  File "/home/owendu/dslab25/obj_detection/dino/pipeline.py", line 496, in <module>
+    state = vid_pred.init_state(video_path=new_video_path)
+  File "/home/owendu/miniconda3/envs/env/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/owendu/sam2/sam2/sam2_video_predictor.py", line 51, in init_state
+    images, video_height, video_width = load_video_frames(
+  File "/home/owendu/sam2/sam2/utils/misc.py", line 189, in load_video_frames
+    return load_video_frames_from_video_file(
+  File "/home/owendu/sam2/sam2/utils/misc.py", line 303, in load_video_frames_from_video_file
+    images = images.to(compute_device)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 6.64 GiB. GPU 0 has a total capacity of 10.90 GiB of which 1.96 GiB is free. Including non-PyTorch memory, this process has 8.94 GiB memory in use. Of the allocated memory 8.66 GiB is allocated by PyTorch, and 124.29 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+srun: error: studgpu-node02: task 0: Exited with exit code 1
