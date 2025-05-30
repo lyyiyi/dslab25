@@ -104,7 +104,9 @@ https://blendermarket.com/products/physics-dropper
 
 ### Run the blender script
 
-`/Applications/Blender.app/Contents/MacOS/Blender --python blender_new.py`
+`/Applications/Blender.app/Contents/MacOS/Blender --python blender_single.py`
+or
+`/Applications/Blender.app/Contents/MacOS/Blender --python blender_messy_table.py`
 
 ## Generate annotations
 
