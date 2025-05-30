@@ -193,6 +193,8 @@ run all cells of `obj_detection/dino/inference.ipynb`
 Put the yolo model weights in `obj_detection/dino/yolo_runs/yolov12_boundingbox2/weights/best.pt`
 Put the dino model weights in `obj_detection/dino/dinov2_finetune/base/final_model/`
 
+One can download the weights we got here for now (will be deleted at some point): https://drive.google.com/drive/folders/1jG1oAAIPkC0HQ8rD882kmf3sLeGSawBg
+
 # TODO:
 
 - augment with scale and shear
