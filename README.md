@@ -2,98 +2,28 @@
 
 Authors: Yi-Yi Ly, Georg Ye, Owen Du
 
+![Preview](intro.gif)
+
+Rejected frames are shown in red, accepted frames in green. Only green frames are classified.
+
 ## Repo Structure
 
 ```
 .
-├── src
-└── data/
-    ├── metadata.csv
-    ├── Vacuum_pump/
-    ├── Vacuum_pump_step_file/
-    ├── class_sequence.txt
-    └── classes.txt
-```
-
-## Merge Requests
-
-We follow the 4-eye-principle before merging any branches.
-
-feature branch -> dev -> main
-
-## Commits
-
-We follow Conventional Commits to make all commit messages coherent.
-
-## Guide to use of student-cluster
-
-Each student can use one GPU for up to 100 hours, and no more than one GPU at the same time. You have 20 GB of space in your home directory and extra space for data in `/work/courses/dsl/team14`
-You can always access the cluster from an ETH wifi. To access the cluster from remote, you need a VPN: https://www.isg.inf.ethz.ch/Main/ServicesNetworkVPN.
-The cluster uses Slurm and a general guide to the cluster can be found at: https://www.isg.inf.ethz.ch/Main/HelpClusterComputingStudentCluster.
-
-You can follow the steps in this message to quickly login the first time and create your conda environment. For more details visit the link above.Login to cluster:
-To login to the student cluster, open your powershell and connect through ssh to one of the 2 login nodes of the student cluster:
-
-`ssh <username>@student-cluster{?2}.inf.ethz.ch` (either include 2 or not)
-
-If you want to use Jupyter you can login from this link: https://student-jupyter.inf.ethz.ch.Using
-
-### conda:
-
-Navigate to the directory that already contains conda:
-
-`cd /cluster/data/miniconda`
-
-You can check the available versions with ls and install the version that you prefer, for example:
-
-`./Miniconda3-py310_23.10.0-1-Linux-x86_64.sh`
-
-Accept the terms and complete the installation. Navigate to your home directory using cd . Now initialize conda:
-
-`~/miniconda3/bin/conda init`
-
-Close and re-open the shell. After logging in again, you should see written (base) at the beginning of the line, and the conda commands should work. You can test it with conda `--version`.Create now a conda environment using the python version that you prefer and activate it:
-
-`conda create -n your_env_name python==3.x -y`
-
-`conda activate your_env_name`
-
-If you want to always open your environment when connecting to the cluster, run:
-
-`nano ~/.bashrc`
-
-And add this after the initialization of conda:
-
-`conda activate your_env_name`
-
-When the environment is activated, you can install packages with pip or conda, e.g. pip install transformers .Running jobs:
-A good guide on how to run a job with slurm on the student cluster is provided at https://www.isg.inf.ethz.ch/Main/HelpClusterComputingStudentClusterRunningJobs.
-Keep in mind that the {course tag} for this course is dsl. (or dslab)
-
-### jobs
 
 ```
-You have the following amount of hours for courses left:
 
-  100 of 100 GPU hours left for dslab [run time 60 minutes]
-  100 of 100 GPU hours left for dslab_jobs [max run time 24 hours]
 
-Your home has 19816MB free space of 20000MB total.
-```
+## Downsample the videos
+Run `dslab25/obj_detection/preprocessing/downsample.ipynb` to downsample the original videos to 5fps. Hereby, change `DATA` path to the path of the original folder, which contains the `.avi` files.
 
-run.sh contains training script \
-you need to change conda activate <env> to your env name\
-add your WANDB API key (don't push it, add script file to .gitignore)\
-run training script using
-
-`sbatch run.sh`
 
 ## Run whole pipeline (extract seedfram -> frame rej -> inference)
 
 Run `dslab25/obj_detection/dino/pipeline.py` to:
 1. obtain the seedframe using cosimilarity search on DINO features on bounding boxes of YOLO and reference object
 2. perform SAM tracking starting seed frame that was found
-3. frame rejection based on IoU
+3. frame rejection based on IoU and scale difference
 4. inference using DINO
 
 Results can be analyzed in `dslab25/obj_detection/dino/final_results.ipynb`.
@@ -127,6 +57,18 @@ The output video can be found in: `/work/courses/dslab/team14/videos/sam_boxed_5
 To **test** the framerejection framework and obtain the confusion matrix for a video, run (from home directory):
 ```
 sbatch dslab25/inference.sh --script dslab25/obj_detection/dino/test_frame_rejection.py
+```
+
+## Analysis of Results
+
+The final results, statistics can be performed in:
+```
+./obj_detection/dino/final_results.ipynb
+```
+
+The masks and contours can be analyzed using:
+```
+./obj_detection/dino/play_masks_analysis.ipynb
 ```
 
 ## Blender
