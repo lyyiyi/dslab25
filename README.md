@@ -23,11 +23,11 @@ pip install -r requirements.txt
 
 ```
 
-## Run whole pipeline (extract seedfram -> frame rej -> inference)
+## Run whole pipeline (extract seed frame -> frame rej -> inference)
 
 Run `./obj_detection/dino/pipeline.py` to:
 
-1. obtain the seedframe using cosimilarity search on DINO features on bounding boxes of YOLO and reference object
+1. obtain the seedframe using cosine similarity search on DINO features on bounding boxes of YOLO and reference object
 2. perform SAM tracking starting seed frame that was found
 3. frame rejection based on IoU and scale difference
 4. inference using DINO
@@ -58,7 +58,7 @@ The masks and contours can be analyzed using:
 
 ## Blender
 
-### One can adjust the material of the objects, the one which was given to us was:
+One can adjust the material of the objects, the one which was given to us was:
 
 ```json
 {
