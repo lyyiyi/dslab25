@@ -32,6 +32,8 @@ Run `dslab25/obj_detection/dino/pipeline.py` to:
 3. frame rejection based on IoU and scale difference
 4. inference using DINO
 
+Important: `DATA_DIR` needs to be updated to where your test videos are stored. Videos should be stored in `DATADIR/input_video/`. Adapt the variables, `subject` (1 to 20), and `run`(1 to 3) for the respective subject x run video. The output video will be saved to `boxed_out` and the predictions/results to `OUT_PATH`. Also, adapt the filepaths to the ckpt-path for DINOv2 (` model_dir/safetensors_path`) and YOLO (` yolo_model_path`). 
+
 Results can be analyzed in `dslab25/obj_detection/dino/final_results.ipynb`.
 
 To **test** the frame rejection framework and obtain the confusion matrix for a video, run (from home directory):
