@@ -174,11 +174,11 @@ This can quite some time, and be be pretty big (around 100GB (I think)).
 First go to `obj_detection/preproccessing/augment.ipynb` and run the Rotate (Images) cell.
 Then go to roboflow and annotate them manually, then put them in `obj_detection/preproccessing/stage_0/labels` and run the rest of the cells (You dont need to do it now because I already did it).
 
-## Running YOLO
+## Training YOLO
 
 run all cells of `obj_detection/dino/yolo.ipynb`
 
-## Running Dino
+## Training Dino
 
 run all cells of `obj_detection/dino/dino.ipynb`
 
