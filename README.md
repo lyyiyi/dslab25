@@ -17,6 +17,20 @@ Rejected frames are shown in red, accepted frames in green. Only green frames ar
 
 Run `dslab25/obj_detection/preprocessing/downsample.ipynb` to downsample the original videos to 5fps. Hereby, change `DATA` path to the path of the original folder, which contains the `.avi` files.
 
+## Installing (requirements, SAM2, blender)
+
+```
+sudo apt update
+sudo apt install pkg-config libcairo2-dev libgirepository1.0-dev python3-dev python3-setuptools zip unzip
+```
+
+apt update
+apt install -y python3-setuptools
+pip install --upgrade pip setuptools wheel
+pip install --no-build-isolation iopath
+
+pip install -r requirements.txt
+
 ## Run whole pipeline (extract seedfram -> frame rej -> inference)
 
 Run `dslab25/obj_detection/dino/pipeline.py` to:
@@ -28,47 +42,15 @@ Run `dslab25/obj_detection/dino/pipeline.py` to:
 
 Results can be analyzed in `dslab25/obj_detection/dino/final_results.ipynb`.
 
-<<<<<<< HEAD
 To **test** the frame rejection framework and obtain the confusion matrix for a video, run (from home directory):
-=======
-
-## Frame Rejection using IoU and Scale Threshold from SAM
-
-Run `dslab25/obj_detection/dino/inference.py` to obtain the results.
-
-If using the student cluster, you can simply run the following instead (from home directory):
-
-> > > > > > > cleaned
 
 ```
 ./obj_detection/dino/test_frame_rejection.py
 ```
 
-<<<<<<< HEAD
-
 ## Analysis of Results
 
 # The final results, statistics can be performed in:
-
-Frame rejection logic: 0. We use two references: the render and a "clean image" (frame 70, in 5fps video). Ideally, we could have a static image in the database of the object to be tracked, instead of hard-coding the clean image, but this is minor and can be adapted for future uses.
-
-1. Perform terative scale-adaptive ICP to match the segmentation of the current object with the reference object's render.
-2. Calculate the IoU btw. current cropped object and cropped reference object.
-3. Reject frames based on IoU (the higher the IoU, the better it matches) and the scale that was used to scale the current object to the clean-image-object-size.
-4. Perform classification on ACCEPTED frames only using DINO.
-5. Obtain metrics on ACCEPTED frames only.
-
-For example,
-
-the clean image object was rescaled with 0.65 with respect to the countour of the render reference object. Thus, in a video setting, we would reject objects where the scale varies too much (`scale_threshold`).
-
-Similarly, if the object does not look alike to the render reference object, then its IoU will be small. We reject based on an `iou_threshold`.
-
-The output video can be found in: `/work/courses/dslab/team14/videos/sam_boxed_5fps_0.6iouthresh_0.1scaletol.mp4`, where red = rejected and green = accepted.
-
-To **test** the framerejection framework and obtain the confusion matrix for a video, run (from home directory):
-
-> > > > > > > cleaned
 
 ```
 ./obj_detection/dino/final_results.ipynb
@@ -82,9 +64,7 @@ The masks and contours can be analyzed using:
 
 ## Blender
 
-### Textures given to us by the challenger giver:
-
-They are wrong lol.
+### One can adjust the material of the objects, the one which was given to us was:
 
 ```json
 {
@@ -129,31 +109,11 @@ https://blendermarket.com/products/physics-dropper
 
 `/Applications/Blender.app/Contents/MacOS/Blender --python blender_new.py`
 
-### Generate annotations
+## Generate annotations
 
 This is old, dont use this anymore. If you need to create annotations from scratch write a new script
 
 `python3 annotation.py --root /Users/georgye/Documents/repos/ethz/dslab25/training vacuum_pump/generated/output/stages --output-dir ./anno`
-
-### Useful commands
-
-Zip folder without .git and venv:
-`zip -r dslab25.zip dslab25 -x "dslab25/.git/*" "dslab25/venv/*" "dslab25/obj_detection/dino/yolo_runs/*"`
-
-Send data on runpod:
-`runpodctl send data.txt`
-
-```
-sudo apt update
-sudo apt install pkg-config libcairo2-dev libgirepository1.0-dev python3-dev python3-setuptools zip unzip
-```
-
-## Installing SAM2
-
-apt update
-apt install -y python3-setuptools
-pip install --upgrade pip setuptools wheel
-pip install --no-build-isolation iopath
 
 ## Preprocessing
 
@@ -195,11 +155,10 @@ Put the dino model weights in `obj_detection/dino/dinov2_finetune/base/final_mod
 
 One can download the weights we got here for now (will be deleted at some point): https://drive.google.com/drive/folders/1jG1oAAIPkC0HQ8rD882kmf3sLeGSawBg
 
-# TODO:
+## Useful commands
 
-- augment with scale and shear
-- randomize objects in each render in blender
+Zip folder without .git and venv:
+`zip -r dslab25.zip dslab25 -x "dslab25/.git/*" "dslab25/venv/*" "dslab25/obj_detection/dino/yolo_runs/*"`
 
-```
-
-```
+Send data on runpod:
+`runpodctl send data.txt`
