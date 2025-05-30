@@ -20,12 +20,12 @@ from utils import compute_metrics, crop_mask, DINOv2Classifier, get_best_iou, \
     get_feat, load_frame_rgb, load_labels, read_video_rgb, set_seed
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--subject", type=int, required=True)
-    parser.add_argument("--run", type=int, required=True)
-    parser.add_argument("--labels_file", type=str, required=True)
-    parser.add_argument("--video_path", type=str, required=True)
-    args = parser.parse_args()
+    #parser = argparse.ArgumentParser()
+    #parser.add_argument("--subject", type=int, required=True)
+    #parser.add_argument("--run", type=int, required=True)
+    #parser.add_argument("--labels_file", type=str, required=True)
+    #parser.add_argument("--video_path", type=str, required=True)
+    #args = parser.parse_args()
 
     # Set a fixed seed for deterministic behavior
     set_seed(42)
@@ -42,18 +42,18 @@ if __name__ == "__main__":
     video_path = args.video_path
     labels_file = args.labels_file
     video = os.path.basename(video_path)
-    # subject = 8
-    # run = 1
+    subject = 8 # Change to btw. 1-20 for test video subjects
+    run = 1 #1,2,3 for the subject's run
 
     print(f"Config for subject {subject}, run {run}")
     print(f"Video file: {video}")
     print(f"Label file: {labels_file}")
 
-    DATA_DIR = '/work/courses/dslab/team14/'
+    DATA_DIR = '/work/courses/dslab/team14/' # Change to where your data is stored
     repo_dir = os.getcwd().split('dslab25')[0] + '/dslab25/'
     model_dir = os.path.join(DATA_DIR, 'ckpt/dino/')
-    # video_path = os.path.join(DATA_DIR, f"videos/input_video/{subject:02d}_run{run}_cam_2_5fps.mp4")
-    # labels_file = os.path.join(DATA_DIR, f"videos/input_video/{subject:02d}_run{run}_labels_5fps.txt")
+    video_path = os.path.join(DATA_DIR, f"videos/input_video/{subject:02d}_run{run}_cam_2_5fps.mp4") # video is stored here
+    labels_file = os.path.join(DATA_DIR, f"videos/input_video/{subject:02d}_run{run}_labels_5fps.txt") # label is stored here
     frames_dir = os.path.join(DATA_DIR, f'videos/frames/{subject:02d}/run{run}')
     boxed_out = os.path.join(DATA_DIR, f"videos/output/videos/{subject:02d}_run{run}_out.mp4")
     mask_ref_path = os.path.join(repo_dir, "obj_detection/dino/", "ref_mask.pkl")
