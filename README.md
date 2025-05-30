@@ -25,7 +25,7 @@ pip install -r requirements.txt
 
 ## Run whole pipeline (extract seedfram -> frame rej -> inference)
 
-Run `dslab25/obj_detection/dino/pipeline.py` to:
+Run `./obj_detection/dino/pipeline.py` to:
 
 1. obtain the seedframe using cosimilarity search on DINO features on bounding boxes of YOLO and reference object
 2. perform SAM tracking starting seed frame that was found
@@ -103,7 +103,7 @@ or
 
 ## Generate annotations
 
-This is old, dont use this anymore. If you need to create annotations from scratch write a new script
+To get annotations run this script,
 
 `python3 annotation.py --root /Users/georgye/Documents/repos/ethz/dslab25/training vacuum_pump/generated/output/stages --output-dir ./anno`
 
