@@ -2,16 +2,11 @@
 
 Authors: Yi-Yi Ly, Georg Ye, Owen Du
 
+We propose a training pipeline consisting of rendering the CAD drawings, augmenting the renders to train both YOLO (for bounding box detection) and DINOv2 (for stage classification). The inference pipeline utilizes masks obtained from SAM. Further, we reject frames where the object is occluded or differs from renders and use YOLO to locate a suitable seed frame. Using these methods, we achieve an F1-score of around 0.81 over 18 test videos.
+
 ![Preview](intro.gif)
 
 Rejected frames are shown in red, accepted frames in green. Only green frames are classified.
-
-## Repo Structure
-
-```
-.
-
-```
 
 ## Downsample the videos
 
