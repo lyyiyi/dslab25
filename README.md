@@ -20,14 +20,11 @@ Run `dslab25/obj_detection/preprocessing/downsample.ipynb` to downsample the ori
 ## Installing (requirements, SAM2, blender)
 
 ```
-sudo apt update
-sudo apt install pkg-config libcairo2-dev libgirepository1.0-dev python3-dev python3-setuptools zip unzip
-```
-
-apt update
-apt install -y python3-setuptools
+sudo apt -y update
+sudo apt -y install pkg-config libcairo2-dev libgirepository1.0-dev python3-dev python3-setuptools zip unzip
 pip install --upgrade pip setuptools wheel
 pip install --no-build-isolation iopath
+```
 
 pip install -r requirements.txt
 
@@ -146,7 +143,7 @@ run all cells of `obj_detection/dino/dino.ipynb`
 
 run all cells of `obj_detection/dino/inference.ipynb`
 
-## Qwen 2.5 VL (expenrimental)
+## Qwen 2.5 VL (experimental)
 
 ### Testing model weights
 
