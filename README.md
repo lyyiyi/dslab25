@@ -91,6 +91,7 @@ run training script using
 ## Run whole pipeline (extract seedfram -> frame rej -> inference)
 
 Run `dslab25/obj_detection/dino/pipeline.py` to:
+
 1. obtain the seedframe using cosimilarity search on DINO features on bounding boxes of YOLO and reference object
 2. perform SAM tracking starting seed frame that was found
 3. frame rejection based on IoU
@@ -103,12 +104,13 @@ Results can be analyzed in `dslab25/obj_detection/dino/final_results.ipynb`.
 Run `dslab25/obj_detection/dino/inference.py` to obtain the results.
 
 If using the student cluster, you can simply run the following instead (from home directory):
+
 ```
 sbatch dslab25/inference.sh --env dsl --script dslab25/obj_detection/dino/inference.py
 ```
 
-Frame rejection logic:
-0. We use two references: the render and a "clean image" (frame 70, in 5fps video). Ideally, we could have a static image in the database of the object to be tracked, instead of hard-coding the clean image, but this is minor and can be adapted for future uses.
+Frame rejection logic: 0. We use two references: the render and a "clean image" (frame 70, in 5fps video). Ideally, we could have a static image in the database of the object to be tracked, instead of hard-coding the clean image, but this is minor and can be adapted for future uses.
+
 1. Perform terative scale-adaptive ICP to match the segmentation of the current object with the reference object's render.
 2. Calculate the IoU btw. current cropped object and cropped reference object.
 3. Reject frames based on IoU (the higher the IoU, the better it matches) and the scale that was used to scale the current object to the clean-image-object-size.
@@ -121,10 +123,10 @@ the clean image object was rescaled with 0.65 with respect to the countour of th
 
 Similarly, if the object does not look alike to the render reference object, then its IoU will be small. We reject based on an `iou_threshold`.
 
-
 The output video can be found in: `/work/courses/dslab/team14/videos/sam_boxed_5fps_0.6iouthresh_0.1scaletol.mp4`, where red = rejected and green = accepted.
 
 To **test** the framerejection framework and obtain the confusion matrix for a video, run (from home directory):
+
 ```
 sbatch dslab25/inference.sh --script dslab25/obj_detection/dino/test_frame_rejection.py
 ```
@@ -197,6 +199,13 @@ sudo apt update
 sudo apt install pkg-config libcairo2-dev libgirepository1.0-dev python3-dev python3-setuptools zip unzip
 ```
 
+## Installing SAM2
+
+apt update
+apt install -y python3-setuptools
+pip install --upgrade pip setuptools wheel
+pip install --no-build-isolation iopath
+
 ## Preprocessing
 
 ### Augment images
@@ -204,39 +213,34 @@ sudo apt install pkg-config libcairo2-dev libgirepository1.0-dev python3-dev pyt
 We do the following
 
 1. Rotation (20 degrees increements)
-2. Brightness
-3. Obscure
+2. SAM features
+3. Tint patches
+4. Brightness
+5. Obscure
+6. Scale
+7. Translate
+
+This can quite some time, and be be pretty big (around 100GB (I think)).
 
 First go to `obj_detection/preproccessing/augment.ipynb` and run the Rotate (Images) cell.
-Then go to roboflow and annotate them manually, then put them in `obj_detection/preproccessing/stage_0/labels` and run the rest of the
+Then go to roboflow and annotate them manually, then put them in `obj_detection/preproccessing/stage_0/labels` and run the rest of the cells (You dont need to do it now because I already did it).
 
 ## Running YOLO
 
-run `obj_detection/dion/train_yolo.py`
+run all cells of `obj_detection/dino/yolo.ipynb`
 
 ## Running Dino
 
-### Create coco annotations
+run all cells of `obj_detection/dino/dino.ipynb`
 
-You need to create a `coco.json` for dino. Run all cells of `obj_detection/dino/coco.ipynb` first.
+## Inference
 
-### Training
+run all cells of `obj_detection/dino/inference.ipynb`
 
-Run this command (replace n with whatever how many gpus you have)
-`torchrun --nproc_per_node=n obj_detection/dino/train.py`
+## Qwen 2.5 VL (expenrimental)
 
-### Testing model weights
-
-Note you need to model weights in `obj_detection/dino/final_model`.
-Run:
-`python3 obj_detection/dino/eval.py`
-
-### Installing SAM2
-
-apt update
-apt install -y python3-setuptools
-pip install --upgrade pip setuptools wheel
-pip install --no-build-isolation iopath
+I was experimenting with Vision Language models but unfortunately it didnt perform so well. Might be because the model was small (7B).
+Might be interesting to check it out `obj_detection/dino/qwen.ipynb`
 
 # TODO:
 
