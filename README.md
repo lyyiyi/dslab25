@@ -19,9 +19,9 @@ sudo apt -y update
 sudo apt -y install pkg-config libcairo2-dev libgirepository1.0-dev python3-dev python3-setuptools zip unzip
 pip install --upgrade pip setuptools wheel
 pip install --no-build-isolation iopath
-```
-
 pip install -r requirements.txt
+
+```
 
 ## Run whole pipeline (extract seedfram -> frame rej -> inference)
 
@@ -92,10 +92,6 @@ The masks and contours can be analyzed using:
     }
   }
 ```
-
-### Install the blender add on (no longer needed):
-
-https://blendermarket.com/products/physics-dropper
 
 ### Run the blender script
 
